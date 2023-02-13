@@ -1,10 +1,16 @@
-diff --git b/Source/WebCore/platform/gtk/PasteboardGtk.cpp a/Source/WebCore/platform/gtk/PasteboardGtk.cpp
-index fbe7198..6693af0 100644
---- b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
-+++ a/Source/WebCore/platform/gtk/PasteboardGtk.cpp
-@@ -315,15 +315,43 @@ void Pasteboard::read(PasteboardWebContentReader& reader, WebContentReadingPolic
+commit 9f2b423fddea63d7e18f0305b0ae120cd9d96395
+Author: ttyS3 <ttys3.rust@gmail.com>
+Date:   2023-02-13 21:07:10 +0800
+
+    fix: fix webkitgtk clipboard image paste
+
+diff --git a/Source/WebCore/platform/gtk/PasteboardGtk.cpp b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
+index ea1b4d6f..57b89c3a 100644
+--- a/Source/WebCore/platform/gtk/PasteboardGtk.cpp
++++ b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
+@@ -318,15 +318,43 @@ void Pasteboard::read(PasteboardWebContentReader& reader, WebContentReadingPolic
  
- void Pasteboard::read(PasteboardFileReader& reader, Optional<size_t>)
+ void Pasteboard::read(PasteboardFileReader& reader, std::optional<size_t>)
  {
 +    WTFLogAlways("xxoo Pasteboard::read PasteboardFileReader");
      if (m_selectionData) {
