@@ -190,7 +190,7 @@ files for developing applications that use JavaScript engine from webkit2gtk-5.0
   %{nil}
 
 %define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-5.0
-export NINJA_STATUS="[1/1][%f/%t %es] "
+export NINJA_STATUS=" ⚙️ [1/1][%f/%t %es] "
 %cmake_build %limit_build -m 3072
 
 %install
