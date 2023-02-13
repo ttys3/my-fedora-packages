@@ -84,7 +84,7 @@ BuildRequires:  pkgconfig(libtasn1)
 BuildRequires:  pkgconfig(libwebp)
 BuildRequires:  pkgconfig(libwoff2dec)
 BuildRequires:  pkgconfig(libxslt)
-%if 0%{?with_gamepad}	
+%if 0%{?with_gamepad}
 BuildRequires:  pkgconfig(manette-0.2)
 %endif
 BuildRequires:  pkgconfig(sqlite3)
@@ -162,26 +162,11 @@ files for developing applications that use JavaScript engine from webkit2gtk-5.0
 %autosetup -p1 -n webkitgtk-%{version}
 
 %build
-# Increase the DIE limit so our debuginfo packages can be size-optimized.
-# This previously decreased the size for x86_64 from ~5G to ~1.1G, but as of
-# 2022 it's more like 850 MB -> 675 MB. This requires lots of RAM on the
-# builders, so only do this for x86_64 to avoid overwhelming non-x86_64
-# builders.
-# https://bugzilla.redhat.com/show_bug.cgi?id=1456261
-%global _dwz_max_die_limit_x86_64 250000000
 
-# Require 32 GB of RAM per vCPU for debuginfo processing. 16 GB is not enough.
-%global _find_debuginfo_opts %limit_build -m 32768
-
-# Reduce debuginfo verbosity 32-bit builds to reduce memory consumption even more.
-# https://bugs.webkit.org/show_bug.cgi?id=140176
-# https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/I6IVNA52TXTBRQLKW45CJ5K4RA4WNGMI/
-#
-# Do this for s390x too as a temporary measure.
-# https://pagure.io/fedora-infrastructure/issue/11000
-%ifarch %{ix86} s390x
-%global optflags %(echo %{optflags} | sed 's/-g /-g1 /')
-%endif
+# disable build debuginfo packages
+# or --rpmbuild-options for tito ?
+# ref https://docs.fedoraproject.org/en-US/packaging-guidelines/Debuginfo/#_useless_or_incomplete_debuginfo_packages_due_to_other_reasons
+%global debug_package %{nil}
 
 %define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-5.0
 %cmake \
