@@ -1,0 +1,9 @@
+*.rpm
+*.srpm
+*.bz2
+*.tar
+*.zip
+*.tgz
+*.gz
+*.7z
+*.log
