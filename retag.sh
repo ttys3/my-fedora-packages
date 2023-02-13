@@ -8,6 +8,6 @@ git tag -d "$tag"
 
 git push origin --delete "$tag"
 
-git tag "$tag"
+tito tag --keep-version
 
-git push origin "$tag" -f
+git push --follow-tags origin -f
