@@ -10,12 +10,12 @@ Version: 16.02
 Release: 24%{?dist}
 # Files under C/Compress/Lzma/ are dual LGPL or CPL
 License: LGPLv2 and (LGPLv2+ or CPL)
-URL: http://p7zip.sourceforge.net/
+URL: https://p7zip.sourceforge.net/
 # RAR sources removed since their license is incompatible with the LGPL
 
 #Source0: https://nchc.dl.sourceforge.net/project/p7zip/p7zip/16.02/p7zip_16.02_src_all.tar.bz2
 
-Source0: http://downloads.sf.net/p7zip/p7zip_16.02_src_all.tar.bz2
+Source0: https://downloads.sf.net/p7zip/p7zip_%{version}_src_all.tar.bz2
 
 Patch0: p7zip_15.14-no_cmake.patch
 # from Debain
