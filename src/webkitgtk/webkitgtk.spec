@@ -282,4 +282,6 @@ export NINJA_STATUS="[1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Tue Feb 14 2023 ttyS3 <41882455+ttys3@users.noreply.github.com> 2.38.4-1
+- add PasteboardGtk patch, fixup paste image bug
 %autochangelog
