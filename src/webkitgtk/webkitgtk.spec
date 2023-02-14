@@ -227,7 +227,8 @@ export NINJA_STATUS=" ⚙️ [1/1][%f/%t %es] "
 %{_libexecdir}/webkit2gtk-5.0/
 %exclude %{_libexecdir}/webkit2gtk-5.0/MiniBrowser
 %exclude %{_libexecdir}/webkit2gtk-5.0/jsc
-%{_bindir}/WebKitWebDriver
+# drop /usr/bin/WebKitWebDriver to avoid conflict with webkit2gtk4.1 provided one
+#%{_bindir}/WebKitWebDriver
 
 %files -n webkit2gtk5.0-devel
 %{_libexecdir}/webkit2gtk-5.0/MiniBrowser
