@@ -1,3 +1,6 @@
+# thanks to https://github.com/liuhangbin/115/blob/main/115.spec
+# thanks to https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=115pc
+
 Name: 115pc
 Version: 2.0.3.6
 Release: 1%{?dist}
