@@ -3,17 +3,17 @@
 # do not call strip
 %global __os_install_post %{nil}
 # do not provides/requires for 115 private lib
-%global __provides_exclude_from /usr/local/115/(lib/.*|plugins/.*)$
-%global __requires_exclude_from /usr/local/115/(lib/.*|plugins/.*)$
+%global __provides_exclude_from /opt/115pc/(lib/.*|plugins/.*)$
+%global __requires_exclude_from /opt/115pc/(lib/.*|plugins/.*)$
 %global __requires_exclude ^(libQt5.*|libav.*|libswresample.*)$
 
-Name: 115
+Name: 115pc
 Version: 2.0.2.9
 Release: 1%{?dist}
 Summary: 115 PC client for Linux
 License: 115 License Agreement
 URL: https://pc.115.com/
-Source0: https://down.115.com/client/%{name}pc/lin/%{name}pc_%{version}.deb
+Source0: https://down.115.com/client/%{name}/lin/%{name}_%{version}.deb
 BuildArch: x86_64
 BuildRequires: alien
 
@@ -24,22 +24,31 @@ BuildRequires: alien
 # use our own way to extract the files
 cp -p %{SOURCE0} .
 rm -rf %{name}pc-%{version}
-rm -rf %{name}pc-%{version}
 alien -t -g %{name}pc_%{version}.deb
 %setup -T -D
 
 %install
-mkdir -p %{buildroot}/usr/local/
-mkdir -p %{buildroot}/usr/share/applications/
+mkdir -p %{buildroot}/opt
+
+
+install -Dm644 usr/share/applications/%{name}.desktop %{buildroot}/usr/share/applications/%{name}.desktop
+install -Dm644 ${srcdir}/usr/local/115/res/115.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/%{name}.png
+cp -aT usr/local/115 %{buildroot}/opt/%{name}
+
+# hack for Wayland
+install -m 755 115.sh %{buildroot}/opt/%{name}/
+
 # do not update via client
-echo '#!/bin/bash' > usr/local/115/update.sh
-echo "echo 'Fedora无法直接安装deb包，请等待repo更新或者联系liuhangbin@gmail.com'" >> usr/local/115/update.sh
-cp -a usr/local/115 %{buildroot}/usr/local/
-install -m 644 usr/share/applications/115.desktop %{buildroot}/usr/share/applications/115.desktop
+echo '#!/bin/bash' > opt/%{name}/update.sh
+echo "echo 'only support update via dnf'" >> opt/%{name}/update.sh
+
+# permission tweaks
+chmod a+x opt/%{name}/libexec/QtWebEngineProcess
 
 %files
-/usr/local/115
-/usr/share/applications/115.desktop
+/opt/115pc
+/usr/share/applications/%{name}.desktop
+/usr/share/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
 * Sun Dec 25 2022 Hangbin Liu <liuhangbin@gmail.com> - 2.0.2.9-1
