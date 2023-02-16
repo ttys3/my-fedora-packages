@@ -1,12 +1,3 @@
-# https://bugzilla.redhat.com/show_bug.cgi?id=1869423
-%global __filter_GLIBC_PRIVATE 1
-# do not call strip
-%global __os_install_post %{nil}
-# do not provides/requires for 115 private lib
-%global __provides_exclude_from /opt/115pc/(lib/.*|plugins/.*)$
-%global __requires_exclude_from /opt/115pc/(lib/.*|plugins/.*)$
-%global __requires_exclude ^(libQt5.*|libav.*|libswresample.*)$
-
 Name: 115pc
 Version: 2.0.3.6
 Release: 1%{?dist}
@@ -17,22 +8,31 @@ Source0: https://down.115.com/client/%{name}/lin/%{name}_%{version}.deb
 BuildArch: x86_64
 BuildRequires: alien
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=1869423
+%global __filter_GLIBC_PRIVATE 1
+# do not call strip
+%global __os_install_post %{nil}
+# do not provides/requires for 115 private lib
+%global __provides_exclude_from /opt/%{name}/(lib/.*|plugins/.*)$
+%global __requires_exclude_from /opt/%{name}/(lib/.*|plugins/.*)$
+%global __requires_exclude ^(libQt5.*|libav.*|libswresample.*)$
+
 %description
 115 PC client for Linux
 
 %prep
 # use our own way to extract the files
 cp -p %{SOURCE0} .
-rm -rf %{name}pc-%{version}
-alien -t -g %{name}pc_%{version}.deb
+rm -rf %{name}-%{version}
+alien -t -g %{name}_%{version}.deb
 %setup -T -D
 
 %install
 mkdir -p %{buildroot}/opt
 
-
 install -Dm644 usr/share/applications/%{name}.desktop %{buildroot}/usr/share/applications/%{name}.desktop
-install -Dm644 ${srcdir}/usr/local/115/res/115.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/%{name}.png
+install -Dm644 usr/local/115/res/115.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/%{name}.png
+
 cp -aT usr/local/115 %{buildroot}/opt/%{name}
 
 # hack for Wayland
