@@ -64,5 +64,8 @@ ls %{buildroot}
 /usr/share/java/%{name}/dependency/jetty-runner.jar
 
 %changelog
+* Thu Feb 16 2023 ttyS3 1.2023.1-1
+- new package built with tito
+
 * Sat Oct 29 2022 ttyS3
 - init port from https://github.com/archlinux/svntogit-community/blob/packages/plantuml-server/trunk/PKGBUILD
