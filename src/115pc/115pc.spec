@@ -4,7 +4,10 @@ Release: 1%{?dist}
 Summary: 115 PC client for Linux
 License: 115 License Agreement
 URL: https://pc.115.com/
+
 Source0: https://down.115.com/client/%{name}/lin/%{name}_%{version}.deb
+Source1: 115.sh
+
 BuildArch: x86_64
 BuildRequires: alien
 
@@ -24,31 +27,44 @@ BuildRequires: alien
 # use our own way to extract the files
 cp -p %{SOURCE0} .
 rm -rf %{name}-%{version}
-alien -t -g %{name}_%{version}.deb
-%setup -T -D
+
+# https://manpages.debian.org/unstable/alien/alien.1p.en.html
+alien -v -t -g %{name}_%{version}.deb
+
+ls -lhp 
+# 115-2.0.3.6
+
+mv 115-%{version} %{name}-%{version}
+
+%setup -T -D -n %{name}-%{version}
 
 %install
 mkdir -p %{buildroot}/opt
 
-install -Dm644 usr/share/applications/%{name}.desktop %{buildroot}/usr/share/applications/%{name}.desktop
-install -Dm644 usr/local/115/res/115.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/%{name}.png
+ls -lhp
+
+install -Dm644 usr/share/applications/115.desktop %{buildroot}/usr/share/applications/%{name}.desktop
+
+sed -i 's|/usr/local/115|/opt/115pc|g' %{buildroot}/usr/share/applications/%{name}.desktop
+
+#install -Dm644 usr/local/115/res/115.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/%{name}.png
 
 cp -aT usr/local/115 %{buildroot}/opt/%{name}
 
 # hack for Wayland
-install -m 755 115.sh %{buildroot}/opt/%{name}/
+install -m 755 %{_sourcedir}/115.sh %{buildroot}/opt/%{name}/
 
 # do not update via client
-echo '#!/bin/bash' > opt/%{name}/update.sh
-echo "echo 'only support update via dnf'" >> opt/%{name}/update.sh
+echo '#!/bin/bash' > %{buildroot}/opt/%{name}/update.sh
+echo "echo 'only support update via dnf'" >> %{buildroot}/opt/%{name}/update.sh
 
 # permission tweaks
-chmod a+x opt/%{name}/libexec/QtWebEngineProcess
+chmod a+x %{buildroot}/opt/%{name}/libexec/QtWebEngineProcess
 
 %files
 /opt/115pc
 /usr/share/applications/%{name}.desktop
-/usr/share/icons/hicolor/256x256/apps/%{name}.png
+#/usr/share/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
 * Sun Dec 25 2022 Hangbin Liu <liuhangbin@gmail.com> - 2.0.2.9-1
