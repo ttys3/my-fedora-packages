@@ -13,7 +13,9 @@ Source1: nosqlbooster4mongo.desktop
 
 Source2: nosqlbooster4mongo.png
 
-BuildArch: noarch
+Source3: AppRun
+
+BuildArch: x86_64
 
 Requires: GConf2
 Requires: libnotify
@@ -23,6 +25,12 @@ Requires: libnotify
 # do not call strip
 %global __os_install_post %{nil}
 
+# do not provides/requires for 115 private lib
+%global __provides_exclude_from /opt/%{name}/(.*\.so|swiftshader/.*|resources/.*|locales/.*)$
+%global __requires_exclude_from /opt/%{name}/(.*\.so|swiftshader/.*|resources/.*|locales/.*)$
+%global __requires_exclude ^(.*\.so)$
+
+
 %description
 NoSQLBooster is a cross-platform IDE for MongoDB Server, which provides a build-in MongoDB script debugger, 
 SQL query, server monitoring tools, chaining fluent query, query code generator, task scheduling, ES2020 support, 
@@ -30,7 +38,7 @@ and advanced IntelliSense experience.
 
 %prep
 # http://ftp.rpm.org/max-rpm/s1-rpm-inside-macros.html
-%setup -D -n %{name}-%{version}
+%setup -c -D -n %{name}-%{version}
 
 ls -lhp
 
