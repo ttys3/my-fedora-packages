@@ -48,7 +48,7 @@ ls -lhp
 
 install -Dm644 usr/share/applications/115.desktop %{buildroot}/usr/share/applications/%{name}.desktop
 
-sed -i 's|/usr/local/115|/opt/115pc|g' %{buildroot}/usr/share/applications/%{name}.desktop
+sed -i 's|/usr/local/115|/opt/%{name}|g' %{buildroot}/usr/share/applications/%{name}.desktop
 
 #install -Dm644 usr/local/115/res/115.png %{buildroot}/usr/share/icons/hicolor/256x256/apps/%{name}.png
 
@@ -65,7 +65,7 @@ echo "echo 'only support update via dnf'" >> %{buildroot}/opt/%{name}/update.sh
 chmod a+x %{buildroot}/opt/%{name}/libexec/QtWebEngineProcess
 
 %files
-/opt/115pc
+/opt/%{name}
 /usr/share/applications/%{name}.desktop
 #/usr/share/icons/hicolor/256x256/apps/%{name}.png
 
