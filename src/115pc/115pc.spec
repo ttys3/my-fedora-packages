@@ -8,7 +8,7 @@
 %global __requires_exclude ^(libQt5.*|libav.*|libswresample.*)$
 
 Name: 115pc
-Version: 2.0.2.9
+Version: 2.0.3.6
 Release: 1%{?dist}
 Summary: 115 PC client for Linux
 License: 115 License Agreement
