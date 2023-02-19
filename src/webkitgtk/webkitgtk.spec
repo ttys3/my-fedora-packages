@@ -16,7 +16,7 @@
 %bcond_without docs
 
 Name:           webkitgtk
-Version:        2.38.4
+Version:        2.38.5
 Release:        %autorelease
 Summary:        GTK web content engine library
 
@@ -269,6 +269,6 @@ export NINJA_STATUS=" ⚙️ [1/1][%f/%t %es] "
 %endif
 
 %changelog
-* Tue Feb 14 2023 ttyS3 <ttys3.rust@gmail.com> 2.38.4-1
+* Tue Feb 14 2023 ttyS3 2.38.4-1
 - add PasteboardGtk patch, fixup paste image bug
 %autochangelog
