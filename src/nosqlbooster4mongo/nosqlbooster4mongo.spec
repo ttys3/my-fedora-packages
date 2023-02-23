@@ -1,7 +1,7 @@
 # thanks to https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=nosqlbooster-mongodb
 
 Name: nosqlbooster4mongo
-Version: 8.0.2
+Version: 8.0.3
 Release: 1%{?dist}
 Summary: a cross-platform IDE for MongoDB Server
 License: NoSQLBooster EULA
@@ -25,10 +25,10 @@ Requires: libnotify
 # do not call strip
 %global __os_install_post %{nil}
 
-# do not provides/requires for 115 private lib
+# do not provides/requires for all libs
 %global __provides_exclude_from /opt/%{name}/(.*\.so|swiftshader/.*|resources/.*|locales/.*)$
-%global __requires_exclude_from /opt/%{name}/(.*\.so|swiftshader/.*|resources/.*|locales/.*)$
-%global __requires_exclude ^(.*\.so)$
+%global __requires_exclude_from /opt/%{name}/.*$
+%define __requires_exclude ^lib.*$
 
 # Don't generate build_id links to prevent conflicts when installing multiple
 # versions of VS Code alongside each other (e.g. `code` and `code-insiders`)
@@ -36,8 +36,8 @@ Requires: libnotify
 %define _build_id_links none
 
 %description
-NoSQLBooster is a cross-platform IDE for MongoDB Server, which provides a build-in MongoDB script debugger, 
-SQL query, server monitoring tools, chaining fluent query, query code generator, task scheduling, ES2020 support, 
+NoSQLBooster is a cross-platform IDE for MongoDB Server, which provides a build-in MongoDB script debugger,
+SQL query, server monitoring tools, chaining fluent query, query code generator, task scheduling, ES2020 support,
 and advanced IntelliSense experience.
 
 %prep
