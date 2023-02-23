@@ -1,3 +1,15 @@
+%global __provides_exclude_from ^%{?name}-.*
+%global __requires_exclude ^(.*)$
+%global debug_package %{nil}
+%global _binaries_in_noarch_packages_terminate_build 0
+# Don't generate build_id links to prevent conflicts when installing multiple
+# versions of VS Code alongside each other (e.g. `code` and `code-insiders`)
+# https://github.com/microsoft/vscode/pull/116105/files
+%define _build_id_links none
+# do not call strip
+%global __os_install_post %{nil}
+AutoReqProv: no
+
 Name: jetbrains-runtime
 Version: 11.0.16
 Release: 1%{?dist}
@@ -18,8 +30,9 @@ This 11 version is espacially for old software like Charles proxy.
 %build
 
 %install
-mkdir -p %{buildroot}/opt/jbr/
-cp -r * %{buildroot}/opt/jbr/
+# Install the JetBrains Runtime Environment to /opt/jbr
+install -d %{buildroot}/opt/jbr
+cp -R %{_builddir}/%{name}-%{version}/* %{buildroot}/opt/jbr/
 
 %files
 /opt/jbr/
