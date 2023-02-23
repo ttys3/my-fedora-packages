@@ -32,7 +32,7 @@ This 11 version is espacially for old software like Charles proxy.
 %install
 # Install the JetBrains Runtime Environment to /opt/jbr
 install -d %{buildroot}/opt/jbr
-cp -R %{_builddir}/%{name}-%{version}/* %{buildroot}/opt/jbr/
+cp -R %{_builddir}/%{name}-%{version}/jbr/* %{buildroot}/opt/jbr/
 
 %files
 /opt/jbr/
