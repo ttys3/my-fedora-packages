@@ -30,6 +30,10 @@ Requires: libnotify
 %global __requires_exclude_from /opt/%{name}/(.*\.so|swiftshader/.*|resources/.*|locales/.*)$
 %global __requires_exclude ^(.*\.so)$
 
+# Don't generate build_id links to prevent conflicts when installing multiple
+# versions of VS Code alongside each other (e.g. `code` and `code-insiders`)
+# https://github.com/microsoft/vscode/pull/116105/files
+%define _build_id_links none
 
 %description
 NoSQLBooster is a cross-platform IDE for MongoDB Server, which provides a build-in MongoDB script debugger, 
