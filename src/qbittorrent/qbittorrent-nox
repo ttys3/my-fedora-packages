@@ -1,0 +1,4 @@
+#!/bin/bash
+TMPDIR=/var/tmp
+export TMPDIR
+/usr/bin/qbittorrent-nox-bin $*
