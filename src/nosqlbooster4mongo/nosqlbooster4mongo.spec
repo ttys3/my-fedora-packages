@@ -1,7 +1,7 @@
 # thanks to https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=nosqlbooster-mongodb
 
 Name: nosqlbooster4mongo
-Version: 8.0.3
+Version: 8.0.4
 Release: 1%{?dist}
 Summary: a cross-platform IDE for MongoDB Server
 License: NoSQLBooster EULA
