@@ -16,9 +16,9 @@ if [ -z "$APPDIR" ] ; then
   # This assumes that this script resides inside the AppDir or a subdirectory.
   # If this script is run inside an AppImage, then the AppImage runtime likely has already set $APPDIR
   path="$(dirname "$(readlink -f "${THIS}")")"
-  while [[ "$path" != "" && ! -e "$path/$1" ]]; do
-    path=${path%/*}
-  done
+  #while [[ "$path" != "" && ! -e "$path/$1" ]]; do
+  #  path=${path%/*}
+  #done
   APPDIR="$path"
 fi
 
