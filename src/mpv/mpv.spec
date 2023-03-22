@@ -9,6 +9,7 @@ Source0:        https://github.com/%{name}-player/%{name}/archive/v%{version}/%{
 
 # https://github.com/mpv-player/mpv/pull/11398
 Patch100:       %{name}-0.35.1-yt-dlp-hook-fix.patch
+Patch101:       %{name}-0.35.1-add-vo-shm.patch
 
 BuildRequires:  desktop-file-utils
 BuildRequires:  gcc
