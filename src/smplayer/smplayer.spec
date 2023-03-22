@@ -14,7 +14,7 @@ Summary:        A graphical frontend for mplayer and mpv
 
 License:        GPLv2+
 URL:            https://www.smplayer.info/
-Source0:        https://downloads.sourceforge.net/smplayer/smplayer-%{version}.tar.bz2
+Source0:        https://github.com/smplayer-dev/smplayer/releases/download/v%{version}/smplayer-%{version}.tar.bz2
 Source3:        https://downloads.sourceforge.net/smplayer/smplayer-themes-%{smplayer_themes_ver}.tar.bz2
 Source4:        https://downloads.sourceforge.net/smplayer/smplayer-skins-%{smplayer_skins_ver}.tar.bz2
 # Fix regression in Thunar (TODO: re-check in upcoming versions!)
@@ -104,6 +104,12 @@ rm -rf src/qtsingleapplication/
 # change rcc binary
 %{__sed} -e 's/rcc -binary/rcc-qt5 -binary/' -i smplayer-themes-%{smplayer_themes_ver}/themes/Makefile
 %{__sed} -e 's/rcc -binary/rcc-qt5 -binary/' -i smplayer-skins-%{smplayer_skins_ver}/themes/Makefile
+
+# enable shm for wayland just like flatpak version
+# ref https://github.com/smplayer-dev/smplayer/blob/d896a836c418f53a29fac977aa2382e3217ff17b/.github/workflows/build-flatpak.yml#L42
+# USE_GL_WINDOW must enabled, otherwise "videolayerrender.cpp:267:10: fatal error: libswscale/swscale.h: No such file or directory"
+# ref https://github.com/smplayer-dev/smplayer/blob/d896a836c418f53a29fac977aa2382e3217ff17b/src/videolayerrender.cpp#L265
+%{__sed} -i 's|.*DEFINES += USE_SHM|DEFINES += USE_SHM\nDEFINES+=USE_GL_WINDOW|' src/smplayer.pro
 
 %build
 pushd src
