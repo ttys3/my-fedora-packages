@@ -2,5 +2,5 @@
 
 set -eou pipefail
 
-fedpkg --release f37 --name p7zip mockbuild --enable-network
+fedpkg --release f38 --name p7zip mockbuild --enable-network
 
