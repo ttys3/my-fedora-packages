@@ -2,7 +2,7 @@
 # thanks to https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=115pc
 
 Name: 115pc
-Version: 2.0.3.6
+Version: 2.0.5.5
 Release: 1%{?dist}
 Summary: 115 PC client for Linux
 License: 115 License Agreement
@@ -35,7 +35,7 @@ rm -rf %{name}-%{version}
 alien -v -t -g %{name}_%{version}.deb
 
 ls -lhp 
-# 115-2.0.3.6
+# 115-2.0.5.5
 
 mv 115-%{version} %{name}-%{version}
 
