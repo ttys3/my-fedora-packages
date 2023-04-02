@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name qbittorrent --release f37 mockbuild --enable-network
+fedpkg --name qbittorrent --release f38 mockbuild --enable-network
 
 

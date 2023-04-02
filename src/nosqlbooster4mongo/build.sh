@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name nosqlbooster4mongo --release f37 mockbuild --enable-network
+fedpkg --name nosqlbooster4mongo --release f38 mockbuild --enable-network
 
 
