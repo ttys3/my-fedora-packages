@@ -31,6 +31,7 @@ Source2:        webkitgtk-keys.gpg
 
 # https://commits.webkit.org/262434@main
 Patch0:         build.patch
+Patch1:         PasteboardGtk-legacy-clipboard-image-paste.patch
 
 BuildRequires:  bison
 BuildRequires:  bubblewrap
