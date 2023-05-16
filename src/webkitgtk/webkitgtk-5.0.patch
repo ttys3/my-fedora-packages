@@ -1,0 +1,562 @@
+diff --git a/src/webkitgtk/PasteboardGtk-legacy-clipboard-image-paste.patch b/src/webkitgtk/PasteboardGtk-legacy-clipboard-image-paste.patch
+new file mode 100644
+index 0000000..82000b2
+--- /dev/null
++++ b/src/webkitgtk/PasteboardGtk-legacy-clipboard-image-paste.patch
+@@ -0,0 +1,43 @@
++commit 1cf6fb34199e57452acab5dd8fe9b93b360eb3be
++Author: ttyS3 <ttys3.rust@gmail.com>
++Date:   2023-05-16 19:35:38 +0800
++
++    fix: fix webkitgtk clipboard image paste
++
++diff --git a/Source/WebCore/platform/gtk/PasteboardGtk.cpp b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
++index e3f5a9a1..4ab2e102 100644
++--- a/Source/WebCore/platform/gtk/PasteboardGtk.cpp
+++++ b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
++@@ -327,9 +327,30 @@ void Pasteboard::read(PasteboardFileReader& reader, std::optional<size_t> index)
++ 
++     if (!index) {
++         auto filePaths = platformStrategies()->pasteboardStrategy()->readFilePathsFromClipboard(m_name);
++-        for (const auto& filePath : filePaths)
+++        for (const auto& filePath : filePaths) {
+++            WTFLogAlways("xxoo Pasteboard::read readFilePathsFromClipboard reader.readFilename filePath=%s", filePath.utf8().data());
++             reader.readFilename(filePath);
++-        return;
+++        }
+++
+++        if (!filePaths.isEmpty()) {
+++            return;
+++        }
+++
+++        WTFLogAlways("xxoo Pasteboard::read readFilePathsFromClipboard got no filePaths, try readBufferFromClipboard pasteboardName=%s", m_name.utf8().data());
+++
+++        auto types = platformStrategies()->pasteboardStrategy()->types(m_name);
+++        static const ASCIILiteral imageTypes[] = { "image/png"_s, "image/jpeg"_s, "image/gif"_s, "image/bmp"_s, "image/vnd.microsoft.icon"_s, "image/x-icon"_s };
+++        for (const auto& imageType : imageTypes) {
+++            if (types.contains(imageType)) {
+++                WTFLogAlways("xxoo Pasteboard::read readBufferFromClipboard types contains imageType=%s", imageType);
+++                auto buffer = platformStrategies()->pasteboardStrategy()->readBufferFromClipboard(m_name, imageType);
+++                if (!buffer->isEmpty()) {
+++                    reader.readBuffer(imageType, imageType, buffer.releaseNonNull());
+++                    WTFLogAlways("xxoo Pasteboard::read reader.readBuffer success");
+++                    return;
+++                }
+++            }
+++        }
++     }
++ 
++     if (reader.shouldReadBuffer("image/png"_s)) {
+diff --git a/src/webkitgtk/PasteboardGtk.cpp.patch b/src/webkitgtk/PasteboardGtk.cpp.patch
+new file mode 100644
+index 0000000..199ec56
+--- /dev/null
++++ b/src/webkitgtk/PasteboardGtk.cpp.patch
+@@ -0,0 +1,56 @@
++commit 9f2b423fddea63d7e18f0305b0ae120cd9d96395
++Author: ttyS3 <ttys3.rust@gmail.com>
++Date:   2023-02-13 21:07:10 +0800
++
++    fix: fix webkitgtk clipboard image paste
++
++diff --git a/Source/WebCore/platform/gtk/PasteboardGtk.cpp b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
++index ea1b4d6f..57b89c3a 100644
++--- a/Source/WebCore/platform/gtk/PasteboardGtk.cpp
+++++ b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
++@@ -318,15 +318,43 @@ void Pasteboard::read(PasteboardWebContentReader& reader, WebContentReadingPolic
++ 
++ void Pasteboard::read(PasteboardFileReader& reader, std::optional<size_t>)
++ {
+++    WTFLogAlways("xxoo Pasteboard::read PasteboardFileReader");
++     if (m_selectionData) {
++-        for (const auto& filePath : m_selectionData->filenames())
+++        WTFLogAlways("xxoo Pasteboard::read m_selectionData");
+++        for (const auto& filePath : m_selectionData->filenames()) {
+++            WTFLogAlways("xxoo Pasteboard::read m_selectionData reader.readFilename filePath=%s", filePath.utf8().data());
++             reader.readFilename(filePath);
+++        }
++         return;
++     }
++ 
+++    
+++    WTFLogAlways("xxoo Pasteboard::read readFilePathsFromClipboard pasteboardName=%s", m_name.utf8().data());
++     auto filePaths = platformStrategies()->pasteboardStrategy()->readFilePathsFromClipboard(m_name);
++-    for (const auto& filePath : filePaths)
+++    for (const auto& filePath : filePaths) {
+++        WTFLogAlways("xxoo Pasteboard::read readFilePathsFromClipboard reader.readFilename filePath=%s", filePath.utf8().data());
++         reader.readFilename(filePath);
+++    }
+++
+++    if (filePaths.isEmpty()) {
+++        WTFLogAlways("xxoo Pasteboard::read readFilePathsFromClipboard got no filePaths, try readBufferFromClipboard pasteboardName=%s", m_name.utf8().data());
+++
+++        auto types = platformStrategies()->pasteboardStrategy()->types(m_name);
+++        static const ASCIILiteral imageTypes[] = { "image/png"_s, "image/jpeg"_s, "image/gif"_s, "image/bmp"_s, "image/vnd.microsoft.icon"_s, "image/x-icon"_s };
+++        for (const auto& imageType : imageTypes) {
+++            if (types.contains(imageType)) {
+++                WTFLogAlways("xxoo Pasteboard::read readBufferFromClipboard types contains imageType");
+++                auto buffer = platformStrategies()->pasteboardStrategy()->readBufferFromClipboard(m_name, imageType);
+++                // readBuffer(const String&, const String& type, Ref<SharedBuffer>&&)
+++                // readImage(Ref<SharedBuffer>&&, const String&, PresentationSize = { }) 
+++                if (!buffer->isEmpty()) {
+++                    reader.readBuffer(imageType, imageType, buffer.releaseNonNull());
+++                    WTFLogAlways("xxoo Pasteboard::read reader.readBuffer success");
+++                    return;
+++                }
+++            }
+++        }
+++    }
++ }
++ 
++ bool Pasteboard::hasData()
+diff --git a/src/webkitgtk/sources b/src/webkitgtk/sources
+index f7e04db..5aec5df 100644
+--- a/src/webkitgtk/sources
++++ b/src/webkitgtk/sources
+@@ -1,2 +1,2 @@
+-SHA512 (webkitgtk-2.38.4.tar.xz) = 1d0418d14d3852172cfa7a4c97964b547d17eba17ff5c94b124e21ae85bcebb1dda67338ceb3ba12531a01f8cfe15c21132fd16747bf17df9e726296723b9d82
+-SHA512 (webkitgtk-2.38.4.tar.xz.asc) = 128e07d2882b391c16d4dc38c6fa6b18d155defd5d0ccb2a99acbd1974cbdfab44ee095f93ad70c37a02f63c44a2fa4b3580f98bae9d9697ba6c8218e5b64363
++SHA512 (webkitgtk-2.38.5.tar.xz) = 9038892910e95d3b7819396c9071b59ee51eadd6cad62130fdd4e02d3f5187b7a2986c5939a378190e14059149f2db0a0b57feb23ac44f5ea764c160e6181eef
++SHA512 (webkitgtk-2.38.5.tar.xz.asc) = 94e798d27f9b890e9f1cab1d7368e4830fd6b9a59f0b96a8fdba50fb304bbed0c2fc5908d409610cebee6a2b69356c64270de8d89bfcac3cd6d8b4bf71fa4050
+\ No newline at end of file
+diff --git a/src/webkitgtk/webkitgtk.spec b/src/webkitgtk/webkitgtk.spec
+index d423006..243ab7c 100644
+--- a/src/webkitgtk/webkitgtk.spec
++++ b/src/webkitgtk/webkitgtk.spec
+@@ -16,7 +16,7 @@
+ %bcond_without docs
+ 
+ Name:           webkitgtk
+-Version:        2.38.4
++Version:        2.38.5
+ Release:        %autorelease
+ Summary:        GTK web content engine library
+ 
+@@ -29,6 +29,8 @@ Source1:        https://webkitgtk.org/releases/webkitgtk-%{version}.tar.xz.asc
+ # $ gpg --export --export-options export-minimal D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3 5AA3BC334FD7E3369E7C77B291C559DBE4C9123B > webkitgtk-keys.gpg
+ Source2:        webkitgtk-keys.gpg
+ 
++Patch0:         PasteboardGtk.cpp.patch
++
+ BuildRequires:  bison
+ BuildRequires:  bubblewrap
+ BuildRequires:  cmake
+@@ -76,14 +78,13 @@ BuildRequires:  pkgconfig(libpcre)
+ BuildRequires:  pkgconfig(libpng)
+ BuildRequires:  pkgconfig(libseccomp)
+ BuildRequires:  pkgconfig(libsecret-1)
+-BuildRequires:  pkgconfig(libsoup-2.4)
+ BuildRequires:  pkgconfig(libsoup-3.0)
+ BuildRequires:  pkgconfig(libsystemd)
+ BuildRequires:  pkgconfig(libtasn1)
+ BuildRequires:  pkgconfig(libwebp)
+ BuildRequires:  pkgconfig(libwoff2dec)
+ BuildRequires:  pkgconfig(libxslt)
+-%if 0%{?with_gamepad}	
++%if 0%{?with_gamepad}
+ BuildRequires:  pkgconfig(manette-0.2)
+ %endif
+ BuildRequires:  pkgconfig(sqlite3)
+@@ -97,7 +98,7 @@ BuildRequires:  pkgconfig(wpebackend-fdo-1.0)
+ BuildRequires:  pkgconfig(xt)
+ 
+ # Filter out provides for private libraries
+-%global __provides_exclude_from ^(%{_libdir}/webkit2gtk-4\\.0/.*\\.so|%{_libdir}/webkit2gtk-4\\.1/.*\\.so|%{_libdir}/webkit2gtk-5\\.0/.*\\.so)$
++%global __provides_exclude_from ^(%{_libdir}/webkit2gtk-5\\.0/.*\\.so)$
+ 
+ %description
+ WebKitGTK is the port of the WebKit web rendering engine to the
+@@ -120,44 +121,6 @@ Provides:       bundled(xdgmime)
+ WebKitGTK is the port of the WebKit web rendering engine to the
+ GTK platform. This package contains WebKitGTK for GTK 4.
+ 
+-%package -n     webkit2gtk4.1
+-Summary:        WebKitGTK for GTK 3 and libsoup 3
+-Requires:       javascriptcoregtk4.1%{?_isa} = %{version}-%{release}
+-Requires:       bubblewrap
+-Requires:       xdg-dbus-proxy
+-Recommends:     geoclue2
+-Recommends:     gstreamer1-plugins-bad-free
+-Recommends:     gstreamer1-plugins-good
+-Recommends:     xdg-desktop-portal-gtk
+-Provides:       bundled(angle)
+-Provides:       bundled(pdfjs)
+-Provides:       bundled(xdgmime)
+-
+-%description -n webkit2gtk4.1
+-WebKitGTK is the port of the WebKit web rendering engine to the
+-GTK platform. This package contains WebKitGTK for GTK 3 and libsoup 3.
+-
+-%package -n     webkit2gtk4.0
+-Summary:        WebKitGTK for GTK 3 and libsoup 2
+-Requires:       javascriptcoregtk4.0%{?_isa} = %{version}-%{release}
+-Requires:       bubblewrap
+-Requires:       xdg-dbus-proxy
+-Recommends:     geoclue2
+-Recommends:     gstreamer1-plugins-bad-free
+-Recommends:     gstreamer1-plugins-good
+-Recommends:     xdg-desktop-portal-gtk
+-Provides:       bundled(angle)
+-Provides:       bundled(pdfjs)
+-Provides:       bundled(xdgmime)
+-Obsoletes:      webkitgtk4 < %{version}-%{release}
+-Provides:       webkitgtk4 = %{version}-%{release}
+-Obsoletes:      webkit2gtk3 < %{version}-%{release}
+-Provides:       webkit2gtk3 = %{version}-%{release}
+-
+-%description -n webkit2gtk4.0
+-WebKitGTK is the port of the WebKit web rendering engine to the
+-GTK platform. This package contains WebKitGTK for GTK 3 and libsoup 2.
+-
+ %package -n     webkit2gtk5.0-devel
+ Summary:        Development files for webkit2gtk5.0
+ Requires:       webkit2gtk5.0%{?_isa} = %{version}-%{release}
+@@ -168,30 +131,6 @@ Requires:       javascriptcoregtk5.0-devel%{?_isa} = %{version}-%{release}
+ The webkit2gtk5.0-devel package contains libraries, build data, and header
+ files for developing applications that use webkit2gtk5.0.
+ 
+-%package -n     webkit2gtk4.1-devel
+-Summary:        Development files for webkit2gtk4.1
+-Requires:       webkit2gtk4.1%{?_isa} = %{version}-%{release}
+-Requires:       javascriptcoregtk4.1%{?_isa} = %{version}-%{release}
+-Requires:       javascriptcoregtk4.1-devel%{?_isa} = %{version}-%{release}
+-
+-%description -n webkit2gtk4.1-devel
+-The webkit2gtk4.1-devel package contains libraries, build data, and header
+-files for developing applications that use webkit2gtk4.1.
+-
+-%package -n     webkit2gtk4.0-devel
+-Summary:        Development files for webkit2gtk4.0
+-Requires:       webkit2gtk4.0%{?_isa} = %{version}-%{release}
+-Requires:       javascriptcoregtk4.0%{?_isa} = %{version}-%{release}
+-Requires:       javascriptcoregtk4.0-devel%{?_isa} = %{version}-%{release}
+-Obsoletes:      webkitgtk4-devel < %{version}-%{release}
+-Provides:       webkitgtk4-devel = %{version}-%{release}
+-Obsoletes:      webkit2gtk3-devel < %{version}-%{release}
+-Provides:       webkit2gtk3-devel = %{version}-%{release}
+-
+-%description -n webkit2gtk4.0-devel
+-The webkit2gtk4.0-devel package contains libraries, build data, and header
+-files for developing applications that use webkit2gtk4.0.
+-
+ %if %{with docs}
+ %package -n     webkit2gtk5.0-doc
+ Summary:        Documentation files for webkit2gtk5.0
+@@ -201,25 +140,6 @@ Requires:       webkit2gtk5.0 = %{version}-%{release}
+ %description -n webkit2gtk5.0-doc
+ This package contains developer documentation for webkit2gtk5.0.
+ 
+-%package -n     webkit2gtk4.1-doc
+-Summary:        Documentation files for webkit2gtk4.1
+-BuildArch:      noarch
+-Requires:       webkit2gtk4.1 = %{version}-%{release}
+-
+-%description -n webkit2gtk4.1-doc
+-This package contains developer documentation for webkit2gtk4.1.
+-
+-%package -n     webkit2gtk4.0-doc
+-Summary:        Documentation files for webkit2gtk4.0
+-BuildArch:      noarch
+-Requires:       webkit2gtk4.0 = %{version}-%{release}
+-Obsoletes:      webkitgtk4-doc < %{version}-%{release}
+-Provides:       webkitgtk4-doc = %{version}-%{release}
+-Obsoletes:      webkit2gtk3-doc < %{version}-%{release}
+-Provides:       webkit2gtk3-doc = %{version}-%{release}
+-
+-%description -n webkit2gtk4.0-doc
+-This package contains developer documentation for webkit2gtk4.0.
+ %endif
+ 
+ %package -n     javascriptcoregtk5.0
+@@ -228,23 +148,6 @@ Summary:        JavaScript engine from webkit2gtk5.0
+ %description -n javascriptcoregtk5.0
+ This package contains JavaScript engine from webkit2gtk5.0.
+ 
+-%package -n     javascriptcoregtk4.1
+-Summary:        JavaScript engine from webkit2gtk4.1
+-Obsoletes:      webkit2gtk4.1-jsc < %{version}-%{release}
+-
+-%description -n javascriptcoregtk4.1
+-This package contains JavaScript engine from webkit2gtk4.1.
+-
+-%package -n     javascriptcoregtk4.0
+-Summary:        JavaScript engine from webkit2gtk4.0
+-Obsoletes:      webkitgtk4-jsc < %{version}-%{release}
+-Provides:       webkitgtk4-jsc = %{version}-%{release}
+-Obsoletes:      webkit2gtk3-jsc < %{version}-%{release}
+-Provides:       webkit2gtk3-jsc = %{version}-%{release}
+-
+-%description -n javascriptcoregtk4.0
+-This package contains JavaScript engine from webkit2gtk4.0.
+-
+ %package -n     javascriptcoregtk5.0-devel
+ Summary:        Development files for JavaScript engine from webkit2gtk5.0
+ Requires:       javascriptcoregtk5.0%{?_isa} = %{version}-%{release}
+@@ -253,52 +156,17 @@ Requires:       javascriptcoregtk5.0%{?_isa} = %{version}-%{release}
+ The javascriptcoregtk5.0-devel package contains libraries, build data, and header
+ files for developing applications that use JavaScript engine from webkit2gtk-5.0.
+ 
+-%package -n     javascriptcoregtk4.1-devel
+-Summary:        Development files for JavaScript engine from webkit2gtk4.1
+-Requires:       javascriptcoregtk4.1%{?_isa} = %{version}-%{release}
+-Obsoletes:      webkit2gtk4.1-jsc-devel < %{version}-%{release}
+-
+-%description -n javascriptcoregtk4.1-devel
+-The javascriptcoregtk4.1-devel package contains libraries, build data, and header
+-files for developing applications that use JavaScript engine from webkit2gtk-4.1.
+-
+-%package -n     javascriptcoregtk4.0-devel
+-Summary:        Development files for JavaScript engine from webkit2gtk4.0
+-Requires:       javascriptcoregtk4.0%{?_isa} = %{version}-%{release}
+-Obsoletes:      webkitgtk4-jsc-devel < %{version}-%{release}
+-Provides:       webkitgtk4-jsc-devel = %{version}-%{release}
+-Obsoletes:      webkit2gtk3-jsc-devel < %{version}-%{release}
+-Provides:       webkit2gtk3-jsc-devel = %{version}-%{release}
+-
+-%description -n javascriptcoregtk4.0-devel
+-The javascriptcoregtk4.0-devel package contains libraries, build data, and header
+-files for developing applications that use JavaScript engine from webkit2gtk-4.0.
+ 
+ %prep
+ %{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
+ %autosetup -p1 -n webkitgtk-%{version}
+ 
+ %build
+-# Increase the DIE limit so our debuginfo packages can be size-optimized.
+-# This previously decreased the size for x86_64 from ~5G to ~1.1G, but as of
+-# 2022 it's more like 850 MB -> 675 MB. This requires lots of RAM on the
+-# builders, so only do this for x86_64 to avoid overwhelming non-x86_64
+-# builders.
+-# https://bugzilla.redhat.com/show_bug.cgi?id=1456261
+-%global _dwz_max_die_limit_x86_64 250000000
+-
+-# Require 32 GB of RAM per vCPU for debuginfo processing. 16 GB is not enough.
+-%global _find_debuginfo_opts %limit_build -m 32768
+-
+-# Reduce debuginfo verbosity 32-bit builds to reduce memory consumption even more.
+-# https://bugs.webkit.org/show_bug.cgi?id=140176
+-# https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/I6IVNA52TXTBRQLKW45CJ5K4RA4WNGMI/
+-#
+-# Do this for s390x too as a temporary measure.
+-# https://pagure.io/fedora-infrastructure/issue/11000
+-%ifarch %{ix86} s390x
+-%global optflags %(echo %{optflags} | sed 's/-g /-g1 /')
+-%endif
++
++# disable build debuginfo packages
++# or --rpmbuild-options for tito ?
++# ref https://docs.fedoraproject.org/en-US/packaging-guidelines/Debuginfo/#_useless_or_incomplete_debuginfo_packages_due_to_other_reasons
++%global debug_package %{nil}
+ 
+ %define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-5.0
+ %cmake \
+@@ -321,70 +189,15 @@ files for developing applications that use JavaScript engine from webkit2gtk-4.0
+ %endif
+   %{nil}
+ 
+-%define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-4.1
+-%cmake \
+-  -GNinja \
+-  -DPORT=GTK \
+-  -DCMAKE_BUILD_TYPE=Release \
+-%if %{without docs}
+-  -DENABLE_DOCUMENTATION=OFF \
+-%endif
+-%if !0%{?with_gamepad}
+-  -DENABLE_GAMEPAD=OFF \
+-%endif
+-%if 0%{?rhel}
+-%ifarch aarch64
+-  -DUSE_64KB_PAGE_BLOCK=ON \
+-%endif
+-%endif
+-  %{nil}
+-
+-%define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-4.0
+-%cmake \
+-  -GNinja \
+-  -DPORT=GTK \
+-  -DCMAKE_BUILD_TYPE=Release \
+-  -DUSE_SOUP2=ON \
+-  -DENABLE_WEBDRIVER=OFF \
+-%if %{without docs}
+-  -DENABLE_DOCUMENTATION=OFF \
+-%endif
+-%if !0%{?with_gamepad}
+-  -DENABLE_GAMEPAD=OFF \
+-%endif
+-%if 0%{?rhel}
+-%ifarch aarch64
+-  -DENABLE_JIT=OFF \
+-  -DUSE_SYSTEM_MALLOC=ON \
+-%endif
+-%endif
+-  %{nil}
+-
+ %define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-5.0
+-export NINJA_STATUS="[1/3][%f/%t %es] "
+-%cmake_build %limit_build -m 3072
+-
+-%define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-4.1
+-export NINJA_STATUS="[2/3][%f/%t %es] "
+-%cmake_build %limit_build -m 3072
+-
+-%define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-4.0
+-export NINJA_STATUS="[3/3][%f/%t %es] "
++export NINJA_STATUS=" ⚙️ [1/1][%f/%t %es] "
+ %cmake_build %limit_build -m 3072
+ 
+ %install
+ %define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-5.0
+ %cmake_install
+ 
+-%define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-4.1
+-%cmake_install
+-
+-%define _vpath_builddir %{_vendor}-%{_target_os}-build/webkit2gtk-4.0
+-%cmake_install
+-
+ %find_lang WebKit2GTK-5.0
+-%find_lang WebKit2GTK-4.1
+-%find_lang WebKit2GTK-4.0
+ 
+ # Finally, copy over and rename various files for %%license inclusion
+ %add_to_license_files Source/JavaScriptCore/COPYING.LIB
+@@ -414,36 +227,8 @@ export NINJA_STATUS="[3/3][%f/%t %es] "
+ %{_libexecdir}/webkit2gtk-5.0/
+ %exclude %{_libexecdir}/webkit2gtk-5.0/MiniBrowser
+ %exclude %{_libexecdir}/webkit2gtk-5.0/jsc
+-%{_bindir}/WebKitWebDriver
+-
+-%files -n webkit2gtk4.1 -f WebKit2GTK-4.1.lang
+-%license _license_files/*ThirdParty*
+-%license _license_files/*WebCore*
+-%license _license_files/*WebInspectorUI*
+-%license _license_files/*WTF*
+-%{_libdir}/libwebkit2gtk-4.1.so.0*
+-%dir %{_libdir}/girepository-1.0
+-%{_libdir}/girepository-1.0/WebKit2-4.1.typelib
+-%{_libdir}/girepository-1.0/WebKit2WebExtension-4.1.typelib
+-%{_libdir}/webkit2gtk-4.1/
+-%{_libexecdir}/webkit2gtk-4.1/
+-%exclude %{_libexecdir}/webkit2gtk-4.1/MiniBrowser
+-%exclude %{_libexecdir}/webkit2gtk-4.1/jsc
+-%{_bindir}/WebKitWebDriver
+-
+-%files -n webkit2gtk4.0 -f WebKit2GTK-4.0.lang
+-%license _license_files/*ThirdParty*
+-%license _license_files/*WebCore*
+-%license _license_files/*WebInspectorUI*
+-%license _license_files/*WTF*
+-%{_libdir}/libwebkit2gtk-4.0.so.37*
+-%dir %{_libdir}/girepository-1.0
+-%{_libdir}/girepository-1.0/WebKit2-4.0.typelib
+-%{_libdir}/girepository-1.0/WebKit2WebExtension-4.0.typelib
+-%{_libdir}/webkit2gtk-4.0/
+-%{_libexecdir}/webkit2gtk-4.0/
+-%exclude %{_libexecdir}/webkit2gtk-4.0/MiniBrowser
+-%exclude %{_libexecdir}/webkit2gtk-4.0/jsc
++# drop /usr/bin/WebKitWebDriver to avoid conflict with webkit2gtk4.1 provided one
++#%{_bindir}/WebKitWebDriver
+ 
+ %files -n webkit2gtk5.0-devel
+ %{_libexecdir}/webkit2gtk-5.0/MiniBrowser
+@@ -457,48 +242,12 @@ export NINJA_STATUS="[3/3][%f/%t %es] "
+ %{_datadir}/gir-1.0/WebKit2-5.0.gir
+ %{_datadir}/gir-1.0/WebKit2WebExtension-5.0.gir
+ 
+-%files -n webkit2gtk4.1-devel
+-%{_libexecdir}/webkit2gtk-4.1/MiniBrowser
+-%{_includedir}/webkitgtk-4.1/
+-%exclude %{_includedir}/webkitgtk-4.1/JavaScriptCore
+-%exclude %{_includedir}/webkitgtk-4.1/jsc
+-%{_libdir}/libwebkit2gtk-4.1.so
+-%{_libdir}/pkgconfig/webkit2gtk-4.1.pc
+-%{_libdir}/pkgconfig/webkit2gtk-web-extension-4.1.pc
+-%dir %{_datadir}/gir-1.0
+-%{_datadir}/gir-1.0/WebKit2-4.1.gir
+-%{_datadir}/gir-1.0/WebKit2WebExtension-4.1.gir
+-
+-%files -n webkit2gtk4.0-devel
+-%{_libexecdir}/webkit2gtk-4.0/MiniBrowser
+-%{_includedir}/webkitgtk-4.0/
+-%exclude %{_includedir}/webkitgtk-4.0/JavaScriptCore
+-%exclude %{_includedir}/webkitgtk-4.0/jsc
+-%{_libdir}/libwebkit2gtk-4.0.so
+-%{_libdir}/pkgconfig/webkit2gtk-4.0.pc
+-%{_libdir}/pkgconfig/webkit2gtk-web-extension-4.0.pc
+-%dir %{_datadir}/gir-1.0
+-%{_datadir}/gir-1.0/WebKit2-4.0.gir
+-%{_datadir}/gir-1.0/WebKit2WebExtension-4.0.gir
+-
+ %files -n javascriptcoregtk5.0
+ %license _license_files/*JavaScriptCore*
+ %{_libdir}/libjavascriptcoregtk-5.0.so.0*
+ %dir %{_libdir}/girepository-1.0
+ %{_libdir}/girepository-1.0/JavaScriptCore-5.0.typelib
+ 
+-%files -n javascriptcoregtk4.1
+-%license _license_files/*JavaScriptCore*
+-%{_libdir}/libjavascriptcoregtk-4.1.so.0*
+-%dir %{_libdir}/girepository-1.0
+-%{_libdir}/girepository-1.0/JavaScriptCore-4.1.typelib
+-
+-%files -n javascriptcoregtk4.0
+-%license _license_files/*JavaScriptCore*
+-%{_libdir}/libjavascriptcoregtk-4.0.so.18*
+-%dir %{_libdir}/girepository-1.0
+-%{_libdir}/girepository-1.0/JavaScriptCore-4.0.typelib
+-
+ %files -n javascriptcoregtk5.0-devel
+ %{_libexecdir}/webkit2gtk-5.0/jsc
+ %dir %{_includedir}/webkitgtk-5.0
+@@ -509,26 +258,6 @@ export NINJA_STATUS="[3/3][%f/%t %es] "
+ %dir %{_datadir}/gir-1.0
+ %{_datadir}/gir-1.0/JavaScriptCore-5.0.gir
+ 
+-%files -n javascriptcoregtk4.1-devel
+-%{_libexecdir}/webkit2gtk-4.1/jsc
+-%dir %{_includedir}/webkitgtk-4.1
+-%{_includedir}/webkitgtk-4.1/JavaScriptCore/
+-%{_includedir}/webkitgtk-4.1/jsc/
+-%{_libdir}/libjavascriptcoregtk-4.1.so
+-%{_libdir}/pkgconfig/javascriptcoregtk-4.1.pc
+-%dir %{_datadir}/gir-1.0
+-%{_datadir}/gir-1.0/JavaScriptCore-4.1.gir
+-
+-%files -n javascriptcoregtk4.0-devel
+-%{_libexecdir}/webkit2gtk-4.0/jsc
+-%dir %{_includedir}/webkitgtk-4.0
+-%{_includedir}/webkitgtk-4.0/JavaScriptCore/
+-%{_includedir}/webkitgtk-4.0/jsc/
+-%{_libdir}/libjavascriptcoregtk-4.0.so
+-%{_libdir}/pkgconfig/javascriptcoregtk-4.0.pc
+-%dir %{_datadir}/gir-1.0
+-%{_datadir}/gir-1.0/JavaScriptCore-4.0.gir
+-
+ %if %{with docs}
+ %files -n webkit2gtk5.0-doc
+ %dir %{_datadir}/gtk-doc
+@@ -537,20 +266,9 @@ export NINJA_STATUS="[3/3][%f/%t %es] "
+ %{_datadir}/gtk-doc/html/webkit2gtk-5.0/
+ %{_datadir}/gtk-doc/html/webkit2gtk-web-extension-5.0/
+ 
+-%files -n webkit2gtk4.1-doc
+-%dir %{_datadir}/gtk-doc
+-%dir %{_datadir}/gtk-doc/html
+-%{_datadir}/gtk-doc/html/javascriptcoregtk-4.1/
+-%{_datadir}/gtk-doc/html/webkit2gtk-4.1/
+-%{_datadir}/gtk-doc/html/webkit2gtk-web-extension-4.1/
+-
+-%files -n webkit2gtk4.0-doc
+-%dir %{_datadir}/gtk-doc
+-%dir %{_datadir}/gtk-doc/html
+-%{_datadir}/gtk-doc/html/javascriptcoregtk-4.0/
+-%{_datadir}/gtk-doc/html/webkit2gtk-4.0/
+-%{_datadir}/gtk-doc/html/webkit2gtk-web-extension-4.0/
+ %endif
+ 
+ %changelog
++* Tue Feb 14 2023 ttyS3 2.38.4-1
++- add PasteboardGtk patch, fixup paste image bug
+ %autochangelog
