@@ -1,0 +1,43 @@
+commit 1cf6fb34199e57452acab5dd8fe9b93b360eb3be
+Author: ttyS3 <ttys3.rust@gmail.com>
+Date:   2023-05-16 19:35:38 +0800
+
+    fix: fix webkitgtk clipboard image paste
+
+diff --git a/Source/WebCore/platform/gtk/PasteboardGtk.cpp b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
+index e3f5a9a1..4ab2e102 100644
+--- a/Source/WebCore/platform/gtk/PasteboardGtk.cpp
++++ b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
+@@ -327,9 +327,30 @@ void Pasteboard::read(PasteboardFileReader& reader, std::optional<size_t> index)
+ 
+     if (!index) {
+         auto filePaths = platformStrategies()->pasteboardStrategy()->readFilePathsFromClipboard(m_name);
+-        for (const auto& filePath : filePaths)
++        for (const auto& filePath : filePaths) {
++            WTFLogAlways("xxoo Pasteboard::read readFilePathsFromClipboard reader.readFilename filePath=%s", filePath.utf8().data());
+             reader.readFilename(filePath);
+-        return;
++        }
++
++        if (!filePaths.isEmpty()) {
++            return;
++        }
++
++        WTFLogAlways("xxoo Pasteboard::read readFilePathsFromClipboard got no filePaths, try readBufferFromClipboard pasteboardName=%s", m_name.utf8().data());
++
++        auto types = platformStrategies()->pasteboardStrategy()->types(m_name);
++        static const ASCIILiteral imageTypes[] = { "image/png"_s, "image/jpeg"_s, "image/gif"_s, "image/bmp"_s, "image/vnd.microsoft.icon"_s, "image/x-icon"_s };
++        for (const auto& imageType : imageTypes) {
++            if (types.contains(imageType)) {
++                WTFLogAlways("xxoo Pasteboard::read readBufferFromClipboard types contains imageType=%s", imageType);
++                auto buffer = platformStrategies()->pasteboardStrategy()->readBufferFromClipboard(m_name, imageType);
++                if (!buffer->isEmpty()) {
++                    reader.readBuffer(imageType, imageType, buffer.releaseNonNull());
++                    WTFLogAlways("xxoo Pasteboard::read reader.readBuffer success");
++                    return;
++                }
++            }
++        }
+     }
+ 
+     if (reader.shouldReadBuffer("image/png"_s)) {
