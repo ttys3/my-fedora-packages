@@ -1,4 +1,11 @@
 
+## how to install
+
+```shell
+ sudo dnf --disablerepo='*' --enablerepo=copr:copr.fedorainfracloud.org:ttys3:my-fedora-packages reinstall xapian-core xapian-core-devel xapian-core-libs xapian-core-debuginfo xapian-core-debugsource
+```
+
+## compile troubleshoot
 
 ```
 checking whether g++ is a working C++ compiler... yes
