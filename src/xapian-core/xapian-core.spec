@@ -100,7 +100,7 @@ make check %{?_smp_mflags}
 %{_libdir}/cmake/xapian
 %{_libdir}/pkgconfig/xapian-core-1.5.pc
 %{_datadir}/aclocal/xapian-1.5.m4
-%{_mandir}/man1/xapian-config.1*
+%{_mandir}/man1/xapian-config-1.5.1*
 
 %changelog
 * Thu May 18 2023 Peter Robinson <pbrobinson@fedoraproject.org> - 1.4.22-1
