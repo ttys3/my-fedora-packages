@@ -85,8 +85,8 @@ make check %{?_smp_mflags}
 %{_bindir}/simpleexpand-1.5
 %{_datadir}/xapian-core/
 %{_mandir}/man1/xapian*
-%{_mandir}/man1/quest.1*
-%{_mandir}/man1/copydatabase.1*
+%{_mandir}/man1/quest-1.5.1*
+%{_mandir}/man1/copydatabase-1.5.1*
 
 %files libs
 %license COPYING
