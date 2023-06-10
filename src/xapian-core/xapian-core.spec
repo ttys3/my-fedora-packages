@@ -6,12 +6,13 @@
 %endif
 
 Name:          xapian-core
-Version:       1.4.22
+Version:       1.5.0_git3540
 Release:       1%{?dist}
 Summary:       The Xapian Probabilistic Information Retrieval Library
 License:       GPL-2.0-or-later
 URL:           https://www.xapian.org/
-Source0:       https://www.oligarchy.co.uk/xapian/%{version}/%{name}-%{version}.tar.xz
+# https://oligarchy.co.uk/xapian/master/xapian-core-1.5.0_git3540.tar.xz
+Source0:       https://www.oligarchy.co.uk/xapian/master/%{name}-%{version}.tar.xz
 
 BuildRequires: gcc
 BuildRequires: gcc-c++
