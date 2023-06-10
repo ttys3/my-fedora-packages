@@ -18,3 +18,20 @@ how to manual build:
 
 /usr/bin/make install DESTDIR=$(pwd)/result INSTALL="/usr/bin/install -p"
 ```
+
+
+## notice
+
+xapian header file path
+
+1.5 is
+```
+/usr/include/xapian-1.5/xapian.h
+/usr/include/xapian-1.5/xapian/*.h
+```
+
+1.4.x is
+```
+/usr/include/xapian.h
+/usr/include/xapian/*.h
+```
