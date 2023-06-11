@@ -96,7 +96,7 @@ we can generate our self tar ball
 ```
 git clone https://github.com/xapian/xapian
 cd xapian
-./bootstrap --download-tools=never
+./bootstrap --download-tools=never xapian-core
 
 sudo dnf builddep xapian-core-devel
 sudo dnf install -y doxygen
