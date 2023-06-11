@@ -99,6 +99,7 @@ make check %{?_smp_mflags}
 %doc HACKING PLATFORMS docs/*html docs/apidoc
 %{_bindir}/xapian-config
 %{_includedir}/xapian
+%{_includedir}/xapian.h
 %{_libdir}/libxapian.so
 %{_libdir}/cmake/xapian
 %{_libdir}/pkgconfig/xapian-core.pc
