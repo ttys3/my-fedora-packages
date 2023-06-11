@@ -1,5 +1,5 @@
 %if 0%{?fedora}
-%global xapian_core_support ON
+%global xapian_core_support OFF
 %global clang_support ON
 %global build_wizard ON
 %else
@@ -12,7 +12,7 @@ Summary: A documentation system for C/C++
 Name:    doxygen
 Epoch:   2
 Version: 1.9.7
-Release: 2%{?dist}
+Release: 3%{?dist}
 # No version is specified.
 License: GPL-1.0-or-later
 Url: https://github.com/doxygen
@@ -25,7 +25,6 @@ Source2: doxywizard-icons.tar.xz
 
 # upstream patches
 Patch0: doxygen-1.9.7-unicode-test.ptch
-Patch1: use-xapian-1.5.patch
 
 BuildRequires: %{_bindir}/python3
 BuildRequires: perl-interpreter, perl-open
