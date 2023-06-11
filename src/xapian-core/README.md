@@ -82,6 +82,11 @@ include dir will change from `/usr/include` to `/usr/include/xapian-1.5`
 
 so we need to patch `xapian-core/configure.ac`
 
+but this is not enough, due to https://github.com/xapian/xapian/commit/c7e4f8bcb739cec898cd9b888b40e4c3ddb097cd
+
+at last, I failed with give up.
+
+let's just keep the `-1.5` ...
 
 ## tar ball issue
 
