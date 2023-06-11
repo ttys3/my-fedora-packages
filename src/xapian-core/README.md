@@ -85,6 +85,8 @@ make dist-xz
 
 https://src.fedoraproject.org/rpms/doxygen/blob/rawhide/f/doxygen.spec
 
+https://www.doxygen.nl/manual/extsearch.html
+
 ```
  Problem: cannot install both xapian-core-libs-1.5.0_git3540-2.fc38.x86_64 from copr:copr.fedorainfracloud.org:ttys3:my-fedora-packages and xapian-core-libs-1.4.22-1.fc38.x86_64 from @System
   - package doxygen-2:1.9.6-7.fc38.x86_64 from @System requires libxapian.so.30()(64bit), but none of the providers can be installed
