@@ -7,7 +7,7 @@
 
 Name:          xapian-core
 Version:       1.5.0_git3540
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       The Xapian Probabilistic Information Retrieval Library
 License:       GPL-2.0-or-later
 URL:           https://www.xapian.org/
