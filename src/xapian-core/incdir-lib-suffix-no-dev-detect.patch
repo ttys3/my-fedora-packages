@@ -1,7 +1,7 @@
-diff --git a/xapian-core/Makefile.am b/xapian-core/Makefile.am
+diff --git a/Makefile.am b/Makefile.am
 index f513c5fd0..57c5aaed1 100644
---- a/xapian-core/Makefile.am
-+++ b/xapian-core/Makefile.am
+--- a/Makefile.am
++++ b/Makefile.am
 @@ -102,11 +102,11 @@ dist_m4data_DATA = m4-macros/xapian-1.5.m4
  
  # Install the pkg-config file containing the correct compiler options.
@@ -18,10 +18,10 @@ index f513c5fd0..57c5aaed1 100644
  libxapian_1_5_la_SOURCES = $(lib_src)
  libxapian_1_5_la_LIBADD = $(XAPIAN_LIBS) $(ICU_LIBS)
  libxapian_1_5_la_LDFLAGS = \
-diff --git a/xapian-core/configure.ac b/xapian-core/configure.ac
+diff --git a/configure.ac b/configure.ac
 index e0fe1b432..1cbc2dcc1 100644
---- a/xapian-core/configure.ac
-+++ b/xapian-core/configure.ac
+--- a/configure.ac
++++ b/configure.ac
 @@ -36,20 +36,6 @@ AC_SUBST([LIBRARY_VERSION_INFO])
  LIBRARY_VERSION_SUFFIX=
  dnl Where xapian.h, etc go.
