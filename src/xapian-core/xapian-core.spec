@@ -6,15 +6,13 @@
 %endif
 
 Name:          xapian-core
-Version:       1.5.0_git3540
-Release:       2%{?dist}
+Version:       1.5.0-git-27b092e
+Release:       1%{?dist}
 Summary:       The Xapian Probabilistic Information Retrieval Library
 License:       GPL-2.0-or-later
 URL:           https://www.xapian.org/
 # https://oligarchy.co.uk/xapian/master/xapian-core-1.5.0_git3540.tar.xz
-Source0:       https://www.oligarchy.co.uk/xapian/master/%{name}-%{version}.tar.xz
-
-Patch0:        fix-doxygen-dynsections.js-missing.patch
+Source0:       https://github.com/ttys3/xapian/releases/download/v%{version}/%{name}-1.5.0.tar.xz
 
 BuildRequires: gcc
 BuildRequires: gcc-c++
