@@ -1,0 +1,25 @@
+diff --git a/xapian-core/configure.ac b/xapian-core/configure.ac
+index e0fe1b432112..1cbc2dcc191c 100644
+--- a/xapian-core/configure.ac
++++ b/xapian-core/configure.ac
+@@ -36,20 +36,6 @@ AC_SUBST([LIBRARY_VERSION_INFO])
+ LIBRARY_VERSION_SUFFIX=
+ dnl Where xapian.h, etc go.
+ incdir=$includedir
+-case $PACKAGE_VERSION in
+-  [*.*[13579].*])
+-    dnl Development release series:
+-    [dev_series=`echo "$PACKAGE_VERSION"|sed 's/\.[^.]*$//'`]
+-
+-    dnl Append version installed programs by default.  To specify no suffix,
+-    dnl configure with: --program-suffix=
+-    test x"$program_suffix" != xNONE || program_suffix=-$dev_series
+-
+-    incdir=$incdir/xapian-$dev_series
+-
+-    LIBRARY_VERSION_SUFFIX=-$dev_series
+-    ;;
+-esac
+ 
+ AC_SUBST([LIBRARY_VERSION_SUFFIX])
+ AC_SUBST([incdir])

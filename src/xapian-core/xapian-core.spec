@@ -7,13 +7,15 @@
 
 Name:          xapian-core
 Version:       1.5.0
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       The Xapian Probabilistic Information Retrieval Library
 License:       GPL-2.0-or-later
 URL:           https://www.xapian.org/
 # https://oligarchy.co.uk/xapian/master/xapian-core-1.5.0_git3540.tar.xz
 # https://github.com/ttys3/xapian/releases/download/v1.5.0_git_27b092e/xapian-core-1.5.0.tar.xz
 Source0:       https://github.com/ttys3/xapian/releases/download/v1.5.0_git_27b092e/%{name}-%{version}.tar.xz
+
+Patch0:        incdir-lib-suffix-no-dev-detect.patch
 
 BuildRequires: gcc
 BuildRequires: gcc-c++
