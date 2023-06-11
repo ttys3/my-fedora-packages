@@ -15,7 +15,6 @@ URL:           https://www.xapian.org/
 # https://github.com/ttys3/xapian/releases/download/v1.5.0_git_27b092e/xapian-core-1.5.0.tar.xz
 Source0:       https://github.com/ttys3/xapian/releases/download/v1.5.0_git_27b092e/%{name}-%{version}.tar.xz
 
-Patch0:        incdir-lib-suffix-no-dev-detect.patch
 
 BuildRequires: gcc
 BuildRequires: gcc-c++
