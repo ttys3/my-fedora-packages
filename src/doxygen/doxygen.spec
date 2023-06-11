@@ -24,6 +24,7 @@ Source2: doxywizard-icons.tar.xz
 
 # upstream patches
 Patch0: doxygen-1.9.7-unicode-test.ptch
+Patch1: use-xapian-1.5.patch
 
 BuildRequires: %{_bindir}/python3
 BuildRequires: perl-interpreter, perl-open
