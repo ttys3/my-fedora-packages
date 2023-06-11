@@ -78,6 +78,10 @@ sudo dnf install -y doxygen
 --with-lua=no
 
 cd xapian-core
+
+# this must exec to run local newer doxygen to generate the new docs
+make -j10
+
 make dist-xz
 ```
 
