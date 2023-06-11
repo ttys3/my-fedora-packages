@@ -86,6 +86,12 @@ but this is not enough, due to https://github.com/xapian/xapian/commit/c7e4f8bcb
 
 we need to remove some other hardcoded `-1.5` suffix
 
+```shell
+cd xapian-core
+sed -i 's|-1.5.pc|.pc|g' `rg -l 1.5.pc`  
+sed -i 's|-1.5.la|.la|g' `rg -l 1.5.la`  
+```
+
 ## tar ball issue
 
 doxgen version too old, has dynsections.js missing bug
