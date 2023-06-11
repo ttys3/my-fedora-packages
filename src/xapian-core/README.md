@@ -47,6 +47,42 @@ xapian header file path
 /usr/include/xapian/*.h
 ```
 
+that is because:
+
+in `xapian/xapian-core/configure.ac`
+
+```shell
+LIBRARY_VERSION_SUFFIX=
+dnl Where xapian.h, etc go.
+incdir=$includedir
+case $PACKAGE_VERSION in
+  [*.*[13579].*])
+    dnl Development release series:
+    [dev_series=`echo "$PACKAGE_VERSION"|sed 's/\.[^.]*$//'`]
+
+    dnl Append version installed programs by default.  To specify no suffix,
+    dnl configure with: --program-suffix=
+    test x"$program_suffix" != xNONE || program_suffix=-$dev_series
+
+    incdir=$incdir/xapian-$dev_series
+
+    LIBRARY_VERSION_SUFFIX=-$dev_series
+    ;;
+esac
+
+AC_SUBST([LIBRARY_VERSION_SUFFIX])
+AC_SUBST([incdir])
+```
+
+so if the version is `1.5.x`, the middle version hit `[*.*[13579].*]`
+
+include dir will change from `/usr/include` to `/usr/include/xapian-1.5`
+
+`LIBRARY_VERSION_SUFFIX` will change from empty to `-1.5`
+
+so we need to patch `xapian-core/configure.ac`
+
+
 ## tar ball issue
 
 doxgen version too old, has dynsections.js missing bug
@@ -97,3 +133,4 @@ https://www.doxygen.nl/manual/extsearch.html
   - cannot install the best candidate for the job
   - problem with installed package doxygen-2:1.9.6-7.fc38.x86_64
 ```
+
