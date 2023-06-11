@@ -81,30 +81,29 @@ make check %{?_smp_mflags}
 %files
 %doc AUTHORS NEWS README
 %{_bindir}/xapian*
-%{_bindir}/quest
-%{_bindir}/copydatabase
-%{_bindir}/simpleindex
-%{_bindir}/simplesearch
-%{_bindir}/simpleexpand
+%{_bindir}/quest-1.5
+%{_bindir}/copydatabase-1.5
+%{_bindir}/simpleindex-1.5
+%{_bindir}/simplesearch-1.5
+%{_bindir}/simpleexpand-1.5
 %{_datadir}/xapian-core/
 %{_mandir}/man1/xapian*
-%{_mandir}/man1/quest.1*
-%{_mandir}/man1/copydatabase.1*
+%{_mandir}/man1/quest-1.5.1*
+%{_mandir}/man1/copydatabase-1.5.1*
 
 %files libs
 %license COPYING
-%{_libdir}/libxapian.so.*
+%{_libdir}/libxapian-1.5.so.*
 
 %files devel
 %doc HACKING PLATFORMS docs/*html docs/apidoc
-%{_bindir}/xapian-config
-%{_includedir}/xapian
-%{_includedir}/xapian.h
-%{_libdir}/libxapian.so
+%{_bindir}/xapian-config-1.5
+%{_includedir}/xapian-1.5
+%{_libdir}/libxapian-1.5.so
 %{_libdir}/cmake/xapian
-%{_libdir}/pkgconfig/xapian-core.pc
-%{_datadir}/aclocal/xapian.m4
-%{_mandir}/man1/xapian-config.1*
+%{_libdir}/pkgconfig/xapian-core-1.5.pc
+%{_datadir}/aclocal/xapian-1.5.m4
+%{_mandir}/man1/xapian-config-1.5.1*
 
 %changelog
 * Thu May 18 2023 Peter Robinson <pbrobinson@fedoraproject.org> - 1.4.22-1
