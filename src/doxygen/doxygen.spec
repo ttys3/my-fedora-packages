@@ -20,6 +20,7 @@ Source0: https://sourceforge.net/projects/doxygen/files/rel-%{version}/%{name}-%
 # this icon is part of kdesdk
 Source1: doxywizard.desktop
 # these icons are part of doxygen and converted from doxywizard.ico
+# https://copr-dist-git.fedorainfracloud.org/repo/pkgs/ttys3/my-fedora-packages/doxygen/doxywizard-icons.tar.xz/md5/5cad8a86f56885264a27ddccc179ac8a/doxywizard-icons.tar.xz
 Source2: doxywizard-icons.tar.xz
 
 # upstream patches
