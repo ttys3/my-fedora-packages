@@ -14,6 +14,8 @@ URL:           https://www.xapian.org/
 # https://oligarchy.co.uk/xapian/master/xapian-core-1.5.0_git3540.tar.xz
 Source0:       https://www.oligarchy.co.uk/xapian/master/%{name}-%{version}.tar.xz
 
+Patch0:        fix-doxygen-dynsections.js-missing.patch
+
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: libuuid-devel
