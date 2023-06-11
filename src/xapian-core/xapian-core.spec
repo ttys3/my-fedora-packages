@@ -7,7 +7,7 @@
 
 Name:          xapian-core
 Version:       1.5.0
-Release:       3%{?dist}
+Release:       4%{?dist}
 Summary:       The Xapian Probabilistic Information Retrieval Library
 License:       GPL-2.0-or-later
 URL:           https://www.xapian.org/
@@ -338,7 +338,7 @@ make check %{?_smp_mflags}
 - Add the libtool archive (temporarily) to fix build of bindings
 
 * Sat May  1 2010 Peter Robinson <pbrobinson@fedoraproject.org> - 1.2.0-2
-- Upload new source 
+- Upload new source
 
 * Sat May  1 2010 Peter Robinson <pbrobinson@fedoraproject.org> - 1.2.0-1
 - Update to 1.2.0
