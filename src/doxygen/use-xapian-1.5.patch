@@ -1,7 +1,19 @@
-diff --git a/cmake/Findxapian.cmake.old b/cmake/Findxapian.cmake
-index 33726cf..79790db 100644
---- a/cmake/Findxapian.cmake.old
-+++ b/cmake/Findxapian.cmake
+diff --git a/../doxygen-1.9.7/CMakeLists.txt b/./CMakeLists.txt
+index 31c8f45..8ab68ba 100644
+--- a/../doxygen-1.9.7/CMakeLists.txt
++++ b/./CMakeLists.txt
+@@ -168,6 +168,7 @@ endif()
+ find_package(Iconv REQUIRED)
+ include_directories(${ICONV_INCLUDE_DIR})
+ 
++include_directories("/usr/include/xapian-1.5")
+ 
+ #set(DOXYDOCS ${PROJECT_SOURCE_DIR}/doc CACHE INTERNAL "Path to doxygen docs")
+ set(DOXYDOCS ${PROJECT_BINARY_DIR}/doc)
+diff --git a/../doxygen-1.9.7/cmake/Findxapian.cmake b/./cmake/Findxapian.cmake
+index 33726cf..9d1110f 100644
+--- a/../doxygen-1.9.7/cmake/Findxapian.cmake
++++ b/./cmake/Findxapian.cmake
 @@ -14,9 +14,9 @@ if(XAPIAN_INCLUDE_DIR AND XAPIAN_LIBRARIES)
      set(xapian_FIND_QUIETLY TRUE)
  endif(XAPIAN_INCLUDE_DIR AND XAPIAN_LIBRARIES)
