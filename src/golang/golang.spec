@@ -101,10 +101,10 @@
 
 %global go_version %{go_api}%{?go_patch:.%{go_patch}}%{?go_prerelease:~%{go_prerelease}}
 %global go_source %{go_api}%{?go_patch:.%{go_patch}}%{?go_prerelease}
- 
+
 # For rpmdev-bumpspec and releng automation
 %global baserelease 2
- 
+
 Name:           golang
 Version:        1.21.0
 Release:        1%{?dist}
@@ -149,9 +149,6 @@ Provides: bundled(golang(golang.org/x/tools)) = 0.9.4.0.20230613194514.c6c983054
 Requires:       %{name}-bin = %{version}-%{release}
 Requires:       %{name}-src = %{version}-%{release}
 Requires:       go-filesystem
-
-Patch1:         0001-Disable-Google-s-proxy-sumdb-and-toolchain.patch
-Patch4:         0004-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-avail.patch
 
 # Having documentation separate was broken
 Obsoletes:      %{name}-docs < 1.1-4
@@ -390,7 +387,7 @@ echo "== 4 =="
         echo "%%{goroot}/$file" >> $shared_list
         echo "%%{golibdir}/$(basename $file)" >> $shared_list
     done
-    
+
     find pkg/*_dynlink/ -type d -printf '%%%dir %{goroot}/%p\n' >> $shared_list
     find pkg/*_dynlink/ ! -type d -printf '%{goroot}/%p\n' >> $shared_list
 %endif
@@ -699,7 +696,7 @@ New release ${PACKIT_PROJECT_VERSION}
 
 * Mon May 10 2021 Alejandro Sáez <asm@redhat.com> - 1.16.4-1
 - Update to go1.16.4
-- Security fix for CVE-2021-31525 
+- Security fix for CVE-2021-31525
 - Resolves: rhbz#1958343
 
 * Fri Apr 09 2021 Alejandro Sáez <asm@redhat.com> - 1.16.3-1
