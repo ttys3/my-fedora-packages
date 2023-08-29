@@ -5,6 +5,6 @@ Terminal=false
 Type=Application
 Icon=nosqlbooster4mongo
 StartupWMClass=NoSQLBooster for MongoDB
-X-AppImage-Version=8.0.10
+X-AppImage-Version=8.0.15
 Comment=Essential Admin GUI for MongoDB
 Categories=Development;
