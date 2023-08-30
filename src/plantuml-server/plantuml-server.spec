@@ -1,5 +1,5 @@
 Name:           plantuml-server
-Version:        1.2023.1
+Version:        1.2023.10
 Release:        1%{?dist}
 Summary:        PlantUML Online Server
 
