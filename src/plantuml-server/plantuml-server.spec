@@ -36,7 +36,8 @@ echo "=============== building ..."
 echo $(pwd)
 ls -lh .
 
-mvn package
+# https://github.com/plantuml/plantuml-server/blob/608b58b3e086d5ad651a2f0a6440ce7a5f578616/Dockerfile.jetty#L7
+mvn --batch-mode --define java.net.useSystemProxies=true package
 
 %install
 echo "=============== installing ..."
