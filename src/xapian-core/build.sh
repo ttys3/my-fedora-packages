@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name xapian-core --release f38 mockbuild --enable-network
+fedpkg --name xapian-core --release f39 mockbuild --enable-network
 
 
