@@ -17,8 +17,14 @@
 # any warning during WebKit docs build is fatal!
 %bcond_without docs
 
+# https://fedoraproject.org/wiki/Changes/Remove_webkit2gtk-4.0_API_Version
+# ELN (RHEL 10) no longer needs 4.0
+%if %{undefined rhel} || 0%{?rhel} < 10
+%bcond_without api40
+%endif
+
 Name:           webkitgtk
-Version:        2.42.0
+Version:        2.42.1
 Release:        %autorelease
 Summary:        GTK web content engine library
 
@@ -31,7 +37,7 @@ Source1:        https://webkitgtk.org/releases/webkitgtk-%{version}.tar.xz.asc
 # $ gpg --export --export-options export-minimal D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3 5AA3BC334FD7E3369E7C77B291C559DBE4C9123B > webkitgtk-keys.gpg
 Source2:        webkitgtk-keys.gpg
 
-Patch0:         PasteboardGtk-legacy-clipboard-image-paste.patch
+Patch:         PasteboardGtk-legacy-clipboard-image-paste.patch
 
 BuildRequires:  bison
 BuildRequires:  bubblewrap
@@ -65,9 +71,7 @@ BuildRequires:  pkgconfig(epoxy)
 BuildRequires:  pkgconfig(fontconfig)
 BuildRequires:  pkgconfig(freetype2)
 BuildRequires:  pkgconfig(gbm)
-BuildRequires:  pkgconfig(gl)
 BuildRequires:  pkgconfig(glib-2.0)
-BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(gobject-introspection-1.0)
 BuildRequires:  pkgconfig(gstreamer-1.0)
 BuildRequires:  pkgconfig(gstreamer-plugins-bad-1.0)
@@ -84,10 +88,12 @@ BuildRequires:  pkgconfig(libjpeg)
 BuildRequires:  pkgconfig(libjxl)
 BuildRequires:  pkgconfig(libnotify)
 BuildRequires:  pkgconfig(libopenjp2)
-BuildRequires:  pkgconfig(libpcre)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(libseccomp)
 BuildRequires:  pkgconfig(libsecret-1)
+%if %{with api40}
+BuildRequires:  pkgconfig(libsoup-2.4)
+%endif
 BuildRequires:  pkgconfig(libsoup-3.0)
 BuildRequires:  pkgconfig(libsystemd)
 BuildRequires:  pkgconfig(libtasn1)
@@ -118,6 +124,7 @@ GTK platform.
 Summary:        WebKitGTK for GTK 4
 Requires:       javascriptcoregtk6.0%{?_isa} = %{version}-%{release}
 Requires:       bubblewrap
+Requires:       libGLES
 Requires:       xdg-dbus-proxy
 Recommends:     geoclue2
 Recommends:     gstreamer1-plugins-bad-free
