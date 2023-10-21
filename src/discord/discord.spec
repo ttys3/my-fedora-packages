@@ -6,7 +6,7 @@
 %global __provides_exclude_from %{_libdir}/discord/.*\\.s
 
 Name:           discord
-Version:        0.0.31
+Version:        0.0.32
 Release:        1%{?dist}
 Summary:        All-in-one voice and text chat for gamers
 
