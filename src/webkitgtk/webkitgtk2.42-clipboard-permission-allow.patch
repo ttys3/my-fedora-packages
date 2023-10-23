@@ -1,0 +1,16 @@
+diff --git a/Source/WebKit/UIProcess/API/glib/WebKitClipboardPermissionRequest.cpp b/Source/WebKit/UIProcess/API/glib/WebKitClipboardPermissionRequest.cpp
+index e89bb4fb..4f0c2b79 100644
+--- a/Source/WebKit/UIProcess/API/glib/WebKitClipboardPermissionRequest.cpp
++++ b/Source/WebKit/UIProcess/API/glib/WebKitClipboardPermissionRequest.cpp
+@@ -82,8 +82,9 @@ static void webkit_permission_request_interface_init(WebKitPermissionRequestInte
+ 
+ static void webkitClipboardPermissionRequestDispose(GObject* object)
+ {
+-    // Default behaviour when no decision has been made is denying the request.
+-    webkitClipboardPermissionRequestDeny(WEBKIT_PERMISSION_REQUEST(object));
++    // hack: to revert https://github.com/WebKit/WebKit/pull/11999 
++    // Default behaviour when no decision has been made is allowing the request.
++    webkitClipboardPermissionRequestAllow(WEBKIT_PERMISSION_REQUEST(object));
+     G_OBJECT_CLASS(webkit_clipboard_permission_request_parent_class)->dispose(object);
+ }
+ 
