@@ -3,7 +3,7 @@
 ## how to install
 
 ```shell
- sudo dnf --disablerepo='*' --enablerepo=copr:copr.fedorainfracloud.org:ttys3:my-fedora-packages reinstall webkitgtk6.0
+sudo dnf --disablerepo='*' --enablerepo=copr:copr.fedorainfracloud.org:ttys3:my-fedora-packages reinstall webkitgtk6.0
 ```
 
 ## legacy versions
@@ -12,9 +12,9 @@ we can not remove 4.0 on destktop env now, because:
 
 ```shell
 ❯ sudo dnf list --installed | rg webkit2gtk4.0
-webkit2gtk4.0.x86_64                                   2.42.1-1.fc39                              @fedora                                                 
-webkit2gtk4.0-devel.x86_64                             2.42.1-1.fc39                              @fedora                                                 
-  VPN🟢[ github.com/ttys3/my-fedora-packages]☸ eks-test (im) in ~/repo/fedora/my-fedora-packages/src/webkitgtk on  main [?] 
+webkit2gtk4.0.x86_64                                   2.42.1-1.fc39                              @fedora
+webkit2gtk4.0-devel.x86_64                             2.42.1-1.fc39                              @fedora
+  VPN🟢[ github.com/ttys3/my-fedora-packages]☸ eks-test (im) in ~/repo/fedora/my-fedora-packages/src/webkitgtk on  main [?]
 ❯ sudo dnf remove webkit2gtk4.0 webkit2gtk4.0-devel
 Dependencies resolved.
 ===============================================================================================================================
@@ -42,5 +42,5 @@ Transaction Summary
 Remove  13 Packages
 
 Freed space: 123 M
-Is this ok [y/N]: 
+Is this ok [y/N]:
 ```
