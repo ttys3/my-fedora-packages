@@ -40,6 +40,7 @@ Source2:        webkitgtk-keys.gpg
 Patch:         PasteboardGtk-legacy-clipboard-image-paste.patch
 Patch:         EnlargeObjectSize.patch
 Patch:         fix-FileReader-readAsDataURL-can-not-read-blob-issue.patch
+Patch:         GTK-Disable-DMABuf-renderer-for-NVIDIA-proprietary-drivers.patch
 
 
 BuildRequires:  bison
