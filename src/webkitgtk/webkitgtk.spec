@@ -220,7 +220,7 @@ files for developing applications that use JavaScript engine from webkitgtk-6.0.
 
 
 %define _vpath_builddir %{_vendor}-%{_target_os}-build/webkitgtk-6.0
-export NINJA_STATUS=" ⏳ [1/1][%f/%t %es] "
+export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %cmake_build %limit_build -m 3072
 
 %install
