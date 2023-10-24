@@ -38,8 +38,9 @@ Source1:        https://webkitgtk.org/releases/webkitgtk-%{version}.tar.xz.asc
 Source2:        webkitgtk-keys.gpg
 
 Patch:         PasteboardGtk-legacy-clipboard-image-paste.patch
-Patch:         webkitgtk2.42-clipboard-permission-allow.patch
 Patch:         EnlargeObjectSize.patch
+Patch:         fix-FileReader-readAsDataURL-can-not-read-blob-issue.patch
+
 
 BuildRequires:  bison
 BuildRequires:  bubblewrap
