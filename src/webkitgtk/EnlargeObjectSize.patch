@@ -6,7 +6,7 @@ diff -Naur webkitgtk-2.40.0/Source/bmalloc/libpas/src/chaos/Chaos.cpp webkitgtk-
      macro(uintptr_t,     seedAdvance,                    1,               "%lu") \
      macro(uintptr_t,     maxSmallObjectSize,             1000,            "%lu") \
 -    macro(uintptr_t,     maxObjectSize,                  65536,           "%lu") \
-+    macro(uintptr_t,     maxObjectSize,                  16777216,        "%lu") \
++    macro(uintptr_t,     maxObjectSize,                  2097152,         "%lu") \
      macro(double,        smallObjectProbability,         .95,             "%lf") \
      macro(double,        memalignProbability,            .05,             "%lf") \
      macro(uintptr_t,     maxMemalignShift,               14,              "%lu") \
