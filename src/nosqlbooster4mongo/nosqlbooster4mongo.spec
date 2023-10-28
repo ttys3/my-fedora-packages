@@ -7,7 +7,8 @@ Summary: a cross-platform IDE for MongoDB Server
 License: NoSQLBooster EULA
 URL: https://nosqlbooster.com
 
-Source0: https://s3.mongobooster.com/download/releasesv8/%{name}-%{version}.tar.gz
+# https://s3.nosqlbooster.com/download/releasesv8/nosqlbooster4mongo-8.1.1.tar.gz
+Source0: https://s3.nosqlbooster.com/download/releasesv8/%{name}-%{version}.tar.gz
 
 Source1: nosqlbooster4mongo.desktop
 
