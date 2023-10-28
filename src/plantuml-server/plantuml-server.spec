@@ -1,5 +1,5 @@
 Name:           plantuml-server
-Version:        1.2023.10
+Version:        1.2023.12
 Release:        1%{?dist}
 Summary:        PlantUML Online Server
 
@@ -65,6 +65,9 @@ ls %{buildroot}
 /usr/share/java/%{name}/dependency/jetty-runner.jar
 
 %changelog
+* Sat Oct 28 2023 ttyS3 <ttys3.rust@gmail.com> 1.2023.12-1
+- chore: use mvn batch-mode (ttys3.rust@gmail.com)
+
 * Thu Feb 16 2023 ttyS3 1.2023.1-1
 - new package built with tito
 
