@@ -1,7 +1,7 @@
 # thanks to https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=nosqlbooster-mongodb
 
 Name: nosqlbooster4mongo
-Version: 8.0.15
+Version: 8.1.1
 Release: 1%{?dist}
 Summary: a cross-platform IDE for MongoDB Server
 License: NoSQLBooster EULA
@@ -68,4 +68,7 @@ find "%{buildroot}/opt/%{name}" -type d -exec chmod 755 {} +
 /usr/share/icons/hicolor/512x512/apps/%{name}.png
 
 %changelog
+* Sat Oct 28 2023 ttyS3 <ttys3.rust@gmail.com> 8.1.1-1
+- chore: update build.sh to use f39 release param (ttys3.rust@gmail.com)
+
 
