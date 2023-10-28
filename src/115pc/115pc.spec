@@ -2,7 +2,7 @@
 # thanks to https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=115pc
 
 Name: 115pc
-Version: 2.0.5.5
+Version: 2.0.6.6
 Release: 1%{?dist}
 Summary: 115 PC client for Linux
 License: 115 License Agreement
@@ -35,7 +35,7 @@ rm -rf %{name}-%{version}
 alien -v -t -g %{name}_%{version}.deb
 
 ls -lhp 
-# 115-2.0.5.5
+# 115-2.0.6.6
 
 mv 115-%{version} %{name}-%{version}
 
@@ -70,6 +70,9 @@ chmod a+x %{buildroot}/opt/%{name}/libexec/QtWebEngineProcess
 #/usr/share/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
+* Sat Oct 28 2023 ttyS3 <ttys3.rust@gmail.com> 2.0.6.6-1
+-
+
 * Sun Dec 25 2022 Hangbin Liu <liuhangbin@gmail.com> - 2.0.2.9-1
 - Update to 2.0.2.9
 
