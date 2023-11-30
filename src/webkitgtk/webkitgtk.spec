@@ -24,7 +24,7 @@
 %endif
 
 Name:           webkitgtk
-Version:        2.42.1
+Version:        2.42.2
 Release:        %autorelease
 Summary:        GTK web content engine library
 
@@ -296,4 +296,7 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Thu Nov 30 2023 ttyS3 <ttys3.rust@gmail.com> 2.42.2-1
+-
+
 %autochangelog
