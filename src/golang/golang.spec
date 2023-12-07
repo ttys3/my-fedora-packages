@@ -525,6 +525,9 @@ fi
 %endif
 
 %changelog
+* Fri Dec 08 2023 ttyS3 <ttys3.rust@gmail.com> 1.21.5-1
+- chore(build): update golang version (ttys3.rust@gmail.com)
+
 * Sat Nov 11 2023 ttyS3 <ttys3.rust@gmail.com> 1.21.4-1
 - chore: update to golang 1.21.4 (ttys3.rust@gmail.com)
 
