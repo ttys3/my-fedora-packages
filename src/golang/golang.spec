@@ -525,6 +525,9 @@ fi
 %endif
 
 %changelog
+* Fri Dec 08 2023 ttyS3 <41882455+ttys3@users.noreply.github.com> 1.21.5-1
+- chore(build): update golang version (41882455+ttys3@users.noreply.github.com)
+
 * Sat Nov 11 2023 ttyS3 <41882455+ttys3@users.noreply.github.com> 1.21.4-1
 - chore: update to golang 1.21.4 (41882455+ttys3@users.noreply.github.com)
 
