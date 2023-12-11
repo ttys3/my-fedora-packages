@@ -296,6 +296,9 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Mon Dec 11 2023 ttyS3 <ttys3.rust@gmail.com> 2.42.3-1
+- chore: update webkitgtk version to 2.42.3 (ttys3.rust@gmail.com)
+
 * Thu Nov 30 2023 ttyS3 <ttys3.rust@gmail.com> 2.42.2-1
 -
 
