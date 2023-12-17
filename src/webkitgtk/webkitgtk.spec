@@ -113,8 +113,6 @@ BuildRequires:  pkgconfig(wayland-client)
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-protocols)
 BuildRequires:  pkgconfig(wayland-server)
-BuildRequires:  pkgconfig(wpe-1.0)
-BuildRequires:  pkgconfig(wpebackend-fdo-1.0)
 BuildRequires:  pkgconfig(xt)
 
 # Filter out provides for private libraries
@@ -288,11 +286,10 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 
 %if %{with docs}
 %files -n webkitgtk6.0-doc
-%dir %{_datadir}/gtk-doc
-%dir %{_datadir}/gtk-doc/html
-%{_datadir}/gtk-doc/html/javascriptcoregtk-6.0/
-%{_datadir}/gtk-doc/html/webkitgtk-6.0/
-%{_datadir}/gtk-doc/html/webkitgtk-web-process-extension-6.0/
+%dir %{_datadir}/doc
+%{_datadir}/doc/javascriptcoregtk-6.0/
+%{_datadir}/doc/webkitgtk-6.0/
+%{_datadir}/doc/webkitgtk-web-process-extension-6.0/
 %endif
 
 %changelog
