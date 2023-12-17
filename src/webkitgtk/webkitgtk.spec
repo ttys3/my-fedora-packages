@@ -24,7 +24,7 @@
 %endif
 
 Name:           webkitgtk
-Version:        2.42.3
+Version:        2.42.4
 Release:        %autorelease
 Summary:        GTK web content engine library
 
@@ -296,6 +296,15 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Sun Dec 17 2023 ttyS3 <41882455+ttys3@users.noreply.github.com> 2.42.4-1
+- chore: add check-upstream script (41882455+ttys3@users.noreply.github.com)
+- Revert "fix: follow change for  2.43.2 https://src.fedoraproject.org/rpms/web
+  kitgtk/c/9686c85def82995df5c8f0fc973415ce37ac5c86?branch=rawhide"
+  (41882455+ttys3@users.noreply.github.com)
+- fix: follow change for  2.43.2 https://src.fedoraproject.org/rpms/webkitgtk/c
+  /9686c85def82995df5c8f0fc973415ce37ac5c86?branch=rawhide
+  (41882455+ttys3@users.noreply.github.com)
+
 * Mon Dec 11 2023 ttyS3 <41882455+ttys3@users.noreply.github.com> 2.42.3-1
 - chore: update webkitgtk version to 2.42.3 (41882455+ttys3@users.noreply.github.com)
 
