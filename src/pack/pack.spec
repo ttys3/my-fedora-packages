@@ -34,12 +34,15 @@ mkdir -p %{buildroot}/usr/local/bin/
 
 ls -lhp
 
-install -Dm755 %{name}-%{version}/%{name} %{buildroot}/usr/local/bin/%{name}
+install -Dm755 %{name} %{buildroot}/usr/local/bin/%{name}
 
 %files
-%{buildroot}/usr/local/bin/%{name}
+/usr/local/bin/%{name}
 
 %changelog
+* Mon Feb 05 2024 ttyS3 <ttys3.rust@gmail.com> 0.33.0-1
+- new package built with tito
+
 
 
 
