@@ -24,7 +24,7 @@
 %endif
 
 Name:           webkitgtk
-Version:        2.42.4
+Version:        2.42.5
 Release:        %autorelease
 Summary:        GTK web content engine library
 
@@ -296,6 +296,9 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Thu Feb 22 2024 ttyS3 <ttys3.rust@gmail.com>
+-
+
 * Sun Dec 17 2023 ttyS3 <ttys3.rust@gmail.com> 2.42.4-1
 - chore: add check-upstream script (ttys3.rust@gmail.com)
 - Revert "fix: follow change for  2.43.2 https://src.fedoraproject.org/rpms/web
