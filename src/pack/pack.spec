@@ -1,7 +1,7 @@
 # thanks to https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=pack-cli
 
 Name: pack
-Version: 0.33.0
+Version: 0.33.2
 Release: 1%{?dist}
 Summary: CLI for building apps using Cloud Native Buildpacks
 License: Apache-2.0 license
@@ -40,6 +40,9 @@ install -Dm755 %{name} %{buildroot}/usr/local/bin/%{name}
 /usr/local/bin/%{name}
 
 %changelog
+* Fri Mar 01 2024 ttyS3 <ttys3.rust@gmail.com>
+-
+
 * Mon Feb 05 2024 ttyS3 <ttys3.rust@gmail.com> 0.33.0-1
 - new package built with tito
 
