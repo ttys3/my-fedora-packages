@@ -8,7 +8,7 @@ License: Apache-2.0 license
 URL: https://github.com/buildpacks/pack
 
 # https://github.com/buildpacks/pack/releases/download/v0.33.0/pack-v0.33.0-linux.tgz
-Source0: https://github.com/buildpacks/pack/releases/download/v0.33.0/%{name}-v%{version}-linux.tgz
+Source0: https://github.com/buildpacks/pack/releases/download/v%{version}/%{name}-v%{version}-linux.tgz
 
 BuildArch: x86_64
 
