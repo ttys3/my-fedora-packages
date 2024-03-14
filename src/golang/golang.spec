@@ -525,6 +525,9 @@ fi
 %endif
 
 %changelog
+* Thu Mar 14 2024 ttyS3 <41882455+ttys3@users.noreply.github.com>
+- chore: update to go1.22.1 (41882455+ttys3@users.noreply.github.com)
+
 * Thu Dec 21 2023 ttyS3 <41882455+ttys3@users.noreply.github.com> 1.22~rc1-1
 - fix: replace - with . in version per packaging guidelines
   (41882455+ttys3@users.noreply.github.com)
