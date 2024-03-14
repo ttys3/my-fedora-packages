@@ -525,6 +525,9 @@ fi
 %endif
 
 %changelog
+* Thu Mar 14 2024 ttyS3 <ttys3.rust@gmail.com>
+- chore: update to go1.22.1 (ttys3.rust@gmail.com)
+
 * Thu Dec 21 2023 ttyS3 <ttys3.rust@gmail.com> 1.22~rc1-1
 - fix: replace - with . in version per packaging guidelines
   (ttys3.rust@gmail.com)
