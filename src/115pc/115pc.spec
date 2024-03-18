@@ -68,7 +68,6 @@ chmod a+x %{buildroot}/opt/%{name}/libexec/QtWebEngineProcess
 %files
 /opt/%{name}
 /usr/share/applications/%{name}.desktop
-#/usr/share/icons/hicolor/256x256/apps/%{name}.png
 
 %changelog
 * Tue Mar 19 2024 ttyS3 <ttys3.rust@gmail.com> 2.0.9.3-1
