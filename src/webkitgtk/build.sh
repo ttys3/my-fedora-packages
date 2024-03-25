@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name webkitgtk --release f39 mockbuild --enable-network
+fedpkg --name webkitgtk --release f40 mockbuild --enable-network
 
 
