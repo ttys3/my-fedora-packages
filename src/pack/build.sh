@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name pack --release f39 mockbuild --enable-network
+fedpkg --name pack --release f40 mockbuild --enable-network
 
 
