@@ -309,6 +309,10 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Wed Mar 27 2024 ttyS3 <ttys3.rust@gmail.com> 2.44.0-1
+- chore: update to 2.44.0 (ttys3.rust@gmail.com)
+- chore: change build script to f40 (ttys3.rust@gmail.com)
+
 * Thu Feb 22 2024 ttyS3 <ttys3.rust@gmail.com>
 -
 
