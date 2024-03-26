@@ -6,9 +6,9 @@
         cp -p %1 _license_files/$(echo '%1' | sed -e 's!/!.!g')
 
 # No libmanette in RHEL
-%if !0%{?rhel}
-%global with_gamepad 1
-%endif
+%bcond gamepad %{undefined rhel}
+%bcond avif %[%{undefined rhel} || %{defined epel}]
+%bcond jpegxl %[%{undefined rhel} || %{defined epel}]
 
 %global _lto_cflags %{nil}
 
@@ -24,7 +24,7 @@
 %endif
 
 Name:           webkitgtk
-Version:        2.42.5
+Version:        2.44.0
 Release:        %autorelease
 Summary:        GTK web content engine library
 
@@ -59,13 +59,14 @@ BuildRequires:  openssl-devel
 BuildRequires:  perl(English)
 BuildRequires:  perl(FindBin)
 BuildRequires:  perl(JSON::PP)
+BuildRequires:  perl(bigint)
 BuildRequires:  python3
 BuildRequires:  ruby
 BuildRequires:  rubygems
 BuildRequires:  rubygem-json
 BuildRequires:  unifdef
 BuildRequires:  xdg-dbus-proxy
-
+ 
 BuildRequires:  pkgconfig(atspi-2)
 BuildRequires:  pkgconfig(cairo)
 BuildRequires:  pkgconfig(egl)
@@ -84,26 +85,26 @@ BuildRequires:  pkgconfig(gtk4)
 BuildRequires:  pkgconfig(harfbuzz)
 BuildRequires:  pkgconfig(icu-uc)
 BuildRequires:  pkgconfig(lcms2)
+%if %{with avif}
 BuildRequires:  pkgconfig(libavif)
+%endif
 BuildRequires:  pkgconfig(libdrm)
 BuildRequires:  pkgconfig(libgcrypt)
 BuildRequires:  pkgconfig(libjpeg)
+%if %{with jpegxl}
 BuildRequires:  pkgconfig(libjxl)
+%endif
 BuildRequires:  pkgconfig(libnotify)
-BuildRequires:  pkgconfig(libopenjp2)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(libseccomp)
 BuildRequires:  pkgconfig(libsecret-1)
-%if %{with api40}
-BuildRequires:  pkgconfig(libsoup-2.4)
-%endif
 BuildRequires:  pkgconfig(libsoup-3.0)
 BuildRequires:  pkgconfig(libsystemd)
 BuildRequires:  pkgconfig(libtasn1)
 BuildRequires:  pkgconfig(libwebp)
 BuildRequires:  pkgconfig(libwoff2dec)
 BuildRequires:  pkgconfig(libxslt)
-%if 0%{?with_gamepad}
+%if %{with gamepad}
 BuildRequires:  pkgconfig(manette-0.2)
 %endif
 BuildRequires:  pkgconfig(sqlite3)
@@ -112,8 +113,6 @@ BuildRequires:  pkgconfig(wayland-client)
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-protocols)
 BuildRequires:  pkgconfig(wayland-server)
-BuildRequires:  pkgconfig(wpe-1.0)
-BuildRequires:  pkgconfig(wpebackend-fdo-1.0)
 BuildRequires:  pkgconfig(xt)
 
 # Filter out provides for private libraries
@@ -161,6 +160,15 @@ Requires:       webkitgtk6.0 = %{version}-%{release}
 Obsoletes:      webkit2gtk5.0-doc < %{version}-%{release}
 Recommends:     gi-docgen-fonts
 
+# Documentation/jsc-glib-4.1/fzy.js is MIT
+# Documentation/jsc-glib-4.1/*.js and *css is Apache-2.0 OR GPL-3.0-or-later
+# Documentation/jsc-glib-4.1/*html is BSD, LGPL-2.1
+# Documentation/webkit2gtk-4.1/*html is  BSD, LGPL-2.1
+# Documentation/webkit2gtk-web-extension-4.1/*html is BSD, LGPL-2.1
+# Documentation/webkit2gtk-web-extension-4.1/solarized* is MIT
+# Documentation/webkit2gtk-web-extension-4.1/style.css is Apache-2.0 OR GPL-3.0-or-later
+License:        MIT AND LGPL-2.1-only AND BSD-3-Clause AND (Apache-2.0 OR GPL-3.0-or-later)
+ 
 %description -n webkitgtk6.0-doc
 This package contains developer documentation for webkitgtk6.0.
 %endif
@@ -206,11 +214,18 @@ files for developing applications that use JavaScript engine from webkitgtk-6.0.
   -DPORT=GTK \
   -DCMAKE_BUILD_TYPE=Release \
   -DUSE_GTK4=ON \
+  -DUSE_LIBBACKTRACE=OFF \
 %if %{without docs}
   -DENABLE_DOCUMENTATION=OFF \
 %endif
 %if !0%{?with_gamepad}
   -DENABLE_GAMEPAD=OFF \
+%endif
+%if %{without avif}
+  -DUSE_AVIF=OFF \
+%endif
+%if %{without jpegxl}
+  -DUSE_JPEGXL=OFF \
 %endif
 %if 0%{?rhel}
 %ifarch aarch64
@@ -287,11 +302,10 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 
 %if %{with docs}
 %files -n webkitgtk6.0-doc
-%dir %{_datadir}/gtk-doc
-%dir %{_datadir}/gtk-doc/html
-%{_datadir}/gtk-doc/html/javascriptcoregtk-6.0/
-%{_datadir}/gtk-doc/html/webkitgtk-6.0/
-%{_datadir}/gtk-doc/html/webkitgtk-web-process-extension-6.0/
+%dir %{_datadir}/doc
+%{_datadir}/doc/javascriptcoregtk-6.0/
+%{_datadir}/doc/webkitgtk-6.0/
+%{_datadir}/doc/webkitgtk-web-process-extension-6.0/
 %endif
 
 %changelog
