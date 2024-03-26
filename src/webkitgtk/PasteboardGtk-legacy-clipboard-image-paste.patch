@@ -1,14 +1,14 @@
-commit 1cf6fb34199e57452acab5dd8fe9b93b360eb3be
+commit 8ba0491551d32f35317aa9c0d35ffbadde431f7e
 Author: ttyS3 <ttys3.rust@gmail.com>
-Date:   2023-05-16 19:35:38 +0800
+Date:   Tue Mar 26 18:19:09 2024 +0000
 
-    fix: fix webkitgtk clipboard image paste
+    PasteboardGtk-legacy-clipboard-image-paste.patch
 
 diff --git a/Source/WebCore/platform/gtk/PasteboardGtk.cpp b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
-index e3f5a9a1..4ab2e102 100644
+index c89f4a12..f6e4be35 100644
 --- a/Source/WebCore/platform/gtk/PasteboardGtk.cpp
 +++ b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
-@@ -327,9 +327,30 @@ void Pasteboard::read(PasteboardFileReader& reader, std::optional<size_t> index)
+@@ -328,9 +328,30 @@ void Pasteboard::read(PasteboardFileReader& reader, std::optional<size_t> index)
  
      if (!index) {
          auto filePaths = platformStrategies()->pasteboardStrategy()->readFilePathsFromClipboard(m_name);

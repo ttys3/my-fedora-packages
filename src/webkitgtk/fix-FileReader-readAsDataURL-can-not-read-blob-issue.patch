@@ -1,34 +1,26 @@
-From 76ca158c3880a852d40e38ebcdf25c3118d64ca2 Mon Sep 17 00:00:00 2001
-From: ttyS3 <ttys3.rust@gmail.com>
-Date: Wed, 25 Oct 2023 01:06:35 +0800
-Subject: [PATCH] fix FileReader readAsDataURL can not read blob issue
+commit 0341a0189f319ac615880da7ad96c9fe8c8345a1
+Author: ttyS3 <ttys3.rust@gmail.com>
+Date:   Tue Mar 26 18:23:45 2024 +0000
 
----
- Source/WebCore/loader/MixedContentChecker.cpp | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+    fix-FileReader-readAsDataURL-can-not-read-blob-issue.patch
 
 diff --git a/Source/WebCore/loader/MixedContentChecker.cpp b/Source/WebCore/loader/MixedContentChecker.cpp
-index f6752fe8..e7be735e 100644
+index f0762ab4..9cb0f694 100644
 --- a/Source/WebCore/loader/MixedContentChecker.cpp
 +++ b/Source/WebCore/loader/MixedContentChecker.cpp
-@@ -88,6 +88,17 @@ bool MixedContentChecker::frameAndAncestorsCanDisplayInsecureContent(LocalFrame&
+@@ -94,6 +94,15 @@ bool MixedContentChecker::frameAndAncestorsCanDisplayInsecureContent(LocalFrame&
          return false;
  
-     bool allowed = !frame.document()->isStrictMixedContentMode() && (frame.settings().allowDisplayOfInsecureContent() || type == ContentType::ActiveCanWarn) && !frame.document()->geolocationAccessed();
-+
+     bool allowed = !document->isStrictMixedContentMode() && (frame.settings().allowDisplayOfInsecureContent() || type == ContentType::ActiveCanWarn) && !frame.document()->geolocationAccessed();
 +    // assume AlwaysDisplayInNonStrictMode::Yes like the old one (2.40.x)
 +    // fix error introduced by https://github.com/WebKit/WebKit/commit/04bd941e62cbadecdc889fb575315ffd142756e4:
 +    // [blocked] The page at https://xxx.example.com/messenger/ was not allowed to display insecure content from blob:https://xxx.example.com/bcfd36b0-569e-4038-ac2f-e5e9825b1295.
 +    // Not allowed to request resource
 +    // Cannot load blob:https://xxx.example.com/bcfd36b0-569e-4038-ac2f-e5e9825b1295 due to access control checks.
-+    if (!frame.document()->isStrictMixedContentMode()) {
++    if (!document->isStrictMixedContentMode()) {
 +        WTFLogAlways("xxoo allowed due to not StrictMixedContentMode and AlwaysDisplayInNonStrictMode::Yes");
 +        allowed = true;
 +    }
-+
      logWarning(frame, allowed, "display"_s, url);
  
      if (allowed) {
--- 
-2.41.0
-

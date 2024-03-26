@@ -1,7 +1,14 @@
-diff -Naur webkitgtk-2.40.0/Source/bmalloc/libpas/src/chaos/Chaos.cpp webkitgtk-2.40.0-enlarged/Source/bmalloc/libpas/src/chaos/Chaos.cpp
---- webkitgtk-2.40.0/Source/bmalloc/libpas/src/chaos/Chaos.cpp	2023-02-20 17:22:22.429757600 +0800
-+++ webkitgtk-2.40.0-enlarged/Source/bmalloc/libpas/src/chaos/Chaos.cpp	2023-03-19 16:16:45.337609472 +0800
-@@ -51,7 +51,7 @@
+commit 4ac8b75e6a82b4a697fe340e367bd360dce8eb0a
+Author: ttyS3 <ttys3.rust@gmail.com>
+Date:   Tue Mar 26 18:20:23 2024 +0000
+
+    EnlargeObjectSize.patch
+
+diff --git a/Source/bmalloc/libpas/src/chaos/Chaos.cpp b/Source/bmalloc/libpas/src/chaos/Chaos.cpp
+index 940558ac..70b99508 100644
+--- a/Source/bmalloc/libpas/src/chaos/Chaos.cpp
++++ b/Source/bmalloc/libpas/src/chaos/Chaos.cpp
+@@ -51,7 +51,7 @@ namespace {
      macro(uintptr_t,     seed,                           666,             "%lu") \
      macro(uintptr_t,     seedAdvance,                    1,               "%lu") \
      macro(uintptr_t,     maxSmallObjectSize,             1000,            "%lu") \
