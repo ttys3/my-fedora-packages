@@ -309,6 +309,9 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Fri Apr 12 2024 ttyS3 <41882455+ttys3@users.noreply.github.com> 2.44.1-1
+- chore: update to 2.44.1 (41882455+ttys3@users.noreply.github.com)
+
 * Wed Mar 27 2024 ttyS3 <41882455+ttys3@users.noreply.github.com> 2.44.0-1
 - chore: update to 2.44.0 (41882455+ttys3@users.noreply.github.com)
 - chore: change build script to f40 (41882455+ttys3@users.noreply.github.com)
