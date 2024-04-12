@@ -24,7 +24,7 @@
 %endif
 
 Name:           webkitgtk
-Version:        2.44.0
+Version:        2.44.1
 Release:        %autorelease
 Summary:        GTK web content engine library
 
