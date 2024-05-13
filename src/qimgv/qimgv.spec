@@ -22,12 +22,12 @@ BuildRequires:  ninja-build
 BuildRequires:  opencv-devel
 
 BuildRequires:  cmake(exiv2)
-BuildRequires:  cmake(Qt5Concurrent)
-BuildRequires:  cmake(Qt5Core) >= 5.12
-BuildRequires:  cmake(Qt5Svg)
-BuildRequires:  cmake(Qt5Widgets)
+BuildRequires:  cmake(Qt6Concurrent)
+BuildRequires:  cmake(Qt6Core) >= 6.7.0
+BuildRequires:  cmake(Qt6Svg)
+BuildRequires:  cmake(Qt6Widgets)
 %if %{with kde}
-BuildRequires:  cmake(KF5WindowSystem)
+BuildRequires:  cmake(KF6WindowSystem)
 %endif
 %if %{with mpv}
 BuildRequires:  pkgconfig(mpv)
