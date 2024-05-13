@@ -1,0 +1,85 @@
+From f0d008400183d3d0b02c485211bff81859e46fde Mon Sep 17 00:00:00 2001
+From: Artem Polishchuk <ego.cordatus@gmail.com>
+Date: Mon, 2 May 2022 23:18:57 +0300
+Subject: [PATCH 1/2] chore: Update qimgv.appdata.xml manifest
+
+---
+ qimgv/distrib/qimgv.appdata.xml | 33 ++++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
+
+diff --git a/qimgv/distrib/qimgv.appdata.xml b/qimgv/distrib/qimgv.appdata.xml
+index 8e6a25b8..2526e918 100644
+--- a/qimgv/distrib/qimgv.appdata.xml
++++ b/qimgv/distrib/qimgv.appdata.xml
+@@ -5,28 +5,35 @@
+   <metadata_license>CC0</metadata_license>
+   <project_license>GPL-3.0-or-later</project_license>
+   <name>qimgv</name>
+-  <summary>Qt5 image viewer with optional video support</summary>
++  <summary>Image viewer. Fast, easy to use. Optional video support.</summary>
+   <description>
+-    <p>Qt5 image viewer. Fast, configurable, easy to use. Optional video support.
++    <p>Image viewer. Fast, easy to use. Optional video support.
+ 
+-Key features:
++       Key features:
+ 
+-- Simple UI
+-- Fast
+-- Easy to use
+-- Fully configurable, including shortcuts
+-- Basic image editing: Crop, Rotate and Resize
+-- Ability to quickly copy / move images to different folders
+-- Experimental video playback via libmpv
+-- Ability to run shell scripts
+-- A nice dark theme, should look identical on every OS / DE</p>
++        - Simple UI
++        - Fast
++        - Easy to use
++        - Fully configurable, including themes, shortcuts
++        - High quality scaling
++        - Basic image editing: Crop, Rotate and Resize
++        - Ability to quickly copy / move images to different folders
++        - Experimental video playback via libmpv
++        - Folder view mode
++        - Ability to run shell scripts</p>
+   </description>
+   <provides>
+     <binary>qimgv</binary>
+   </provides>
+   <screenshots>
+     <screenshot type="default">
+-      <image>https://camo.githubusercontent.com/00793753c37237167fca0a36e46524f0db1ee612/68747470733a2f2f692e696d6775722e636f6d2f4b6545543149652e706e67</image>
++      <image>https://raw.githubusercontent.com/easymodo/qimgv/master/qimgv/distrib/screenshots/qimgv0.9_1.jpg</image>
++    </screenshot>
++    <screenshot>
++      <image>https://raw.githubusercontent.com/easymodo/qimgv/master/qimgv/distrib/screenshots/qimgv0.9_2.jpg</image>
++    </screenshot>
++    <screenshot>
++      <image>https://raw.githubusercontent.com/easymodo/qimgv/master/qimgv/distrib/screenshots/qimgv_3.jpg</image>
+     </screenshot>
+   </screenshots>
+   <developer_name>easymodo</developer_name>
+
+From 55ad10befb27e8611ab02cecc53498e00c3e4404 Mon Sep 17 00:00:00 2001
+From: Artem Polishchuk <ego.cordatus@gmail.com>
+Date: Mon, 2 May 2022 23:44:51 +0300
+Subject: [PATCH 2/2] build: Add AppData installation via Cmake
+
+---
+ qimgv/CMakeLists.txt | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/qimgv/CMakeLists.txt b/qimgv/CMakeLists.txt
+index 464257b9..e2998e5d 100644
+--- a/qimgv/CMakeLists.txt
++++ b/qimgv/CMakeLists.txt
+@@ -109,4 +109,7 @@ foreach(icon IN ITEMS 16x16 22x22 24x24 32x32 36x36 48x48 64x64 128x128 256x256)
+ endforeach()
+ install(FILES distrib/hicolor/scalable/apps/qimgv.svg
+     DESTINATION ${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/scalable/apps)
+-    
++
++# AppData manifest
++install(FILES distrib/qimgv.appdata.xml
++    DESTINATION ${CMAKE_INSTALL_FULL_DATAROOTDIR}/metainfo)
