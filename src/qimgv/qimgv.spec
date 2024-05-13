@@ -107,4 +107,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/*.desktop
 
 
 %changelog
+* Mon May 13 2024 ttyS3 <41882455+ttys3@users.noreply.github.com> 1.0.3-1
+- new package built with tito
+
 %autochangelog
