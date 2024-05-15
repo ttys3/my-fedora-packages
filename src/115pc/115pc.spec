@@ -2,14 +2,14 @@
 # thanks to https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=115pc
 
 Name: 115pc
-Version: 2.0.9.3
+Version: 2.0.10.2
 Release: 1%{?dist}
 Summary: 115 PC client for Linux
 License: 115 License Agreement
 URL: https://pc.115.com/
 
-# https://down.115.com/client/115pc/lin/115pc_2.0.9.3.deb
-Source0: https://down.115.com/client/%{name}/lin/%{name}_%{version}.deb
+# https://down.115.com/client/115pc/lin/115_v2.0.10.2.deb
+Source0: https://down.115.com/client/%{name}/lin/115_v%{version}.deb
 Source1: 115.sh
 
 BuildArch: x86_64
@@ -33,7 +33,7 @@ cp -p %{SOURCE0} .
 rm -rf %{name}-%{version}
 
 # https://manpages.debian.org/unstable/alien/alien.1p.en.html
-alien -v -t -g %{name}_%{version}.deb
+alien -v -t -g 115_v%{version}.deb
 
 ls -lhp
 # 115-2.0.8.5
@@ -70,6 +70,11 @@ chmod a+x %{buildroot}/opt/%{name}/libexec/QtWebEngineProcess
 /usr/share/applications/%{name}.desktop
 
 %changelog
+* Thu May 16 2024 ttyS3 <ttys3.rust@gmail.com> 2.0.10.2-1
+- chore: change build script to f40 (ttys3.rust@gmail.com)
+- chore: fix warning (ttys3.rust@gmail.com)
+- chore: add build.sh for 115pc (ttys3.rust@gmail.com)
+
 * Tue Mar 19 2024 ttyS3 <ttys3.rust@gmail.com> 2.0.9.3-1
 -
 
