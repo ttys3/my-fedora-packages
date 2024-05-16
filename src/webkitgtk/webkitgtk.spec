@@ -10,8 +10,6 @@
 %bcond avif %[%{undefined rhel} || %{defined epel}]
 %bcond jpegxl %[%{undefined rhel} || %{defined epel}]
 
-%global _lto_cflags %{nil}
-
 # Build documentation by default (use `rpmbuild --without docs` to override it).
 # This is used by Coverity. Coverity injects custom compiler warnings, but
 # any warning during WebKit docs build is fatal!
@@ -66,7 +64,7 @@ BuildRequires:  rubygems
 BuildRequires:  rubygem-json
 BuildRequires:  unifdef
 BuildRequires:  xdg-dbus-proxy
- 
+
 BuildRequires:  pkgconfig(atspi-2)
 BuildRequires:  pkgconfig(cairo)
 BuildRequires:  pkgconfig(egl)
@@ -168,7 +166,7 @@ Recommends:     gi-docgen-fonts
 # Documentation/webkit2gtk-web-extension-4.1/solarized* is MIT
 # Documentation/webkit2gtk-web-extension-4.1/style.css is Apache-2.0 OR GPL-3.0-or-later
 License:        MIT AND LGPL-2.1-only AND BSD-3-Clause AND (Apache-2.0 OR GPL-3.0-or-later)
- 
+
 %description -n webkitgtk6.0-doc
 This package contains developer documentation for webkitgtk6.0.
 %endif
