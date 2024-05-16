@@ -34,7 +34,7 @@ Source0:        https://webkitgtk.org/releases/webkitgtk-%{version}.tar.xz
 Source1:        https://webkitgtk.org/releases/webkitgtk-%{version}.tar.xz.asc
 # Use the keys from https://webkitgtk.org/verifying.html
 # $ gpg --import aperez.key carlosgc.key
-# $ gpg --export --export-options export-minimal D7FCF61CF9A2DEAB31D81BD3F3D322D0EC4582C3 5AA3BC334FD7E3369E7C77B291C559DBE4C9123B > webkitgtk-keys.gpg
+# $ gpg --export --export-options export-minimal 013A0127AC9C65B34FFA62526C1009B693975393 5AA3BC334FD7E3369E7C77B291C559DBE4C9123B > webkitgtk-keys.gpg
 Source2:        webkitgtk-keys.gpg
 
 Patch:         PasteboardGtk-legacy-clipboard-image-paste.patch
