@@ -5,11 +5,6 @@
         mkdir -p _license_files ; \
         cp -p %1 _license_files/$(echo '%1' | sed -e 's!/!.!g')
 
-# No libmanette in RHEL
-%bcond gamepad %{undefined rhel}
-%bcond avif %[%{undefined rhel} || %{defined epel}]
-%bcond jpegxl %[%{undefined rhel} || %{defined epel}]
-
 # Build documentation by default (use `rpmbuild --without docs` to override it).
 # This is used by Coverity. Coverity injects custom compiler warnings, but
 # any warning during WebKit docs build is fatal!
@@ -83,15 +78,11 @@ BuildRequires:  pkgconfig(gtk4)
 BuildRequires:  pkgconfig(harfbuzz)
 BuildRequires:  pkgconfig(icu-uc)
 BuildRequires:  pkgconfig(lcms2)
-%if %{with avif}
 BuildRequires:  pkgconfig(libavif)
-%endif
 BuildRequires:  pkgconfig(libdrm)
 BuildRequires:  pkgconfig(libgcrypt)
 BuildRequires:  pkgconfig(libjpeg)
-%if %{with jpegxl}
 BuildRequires:  pkgconfig(libjxl)
-%endif
 BuildRequires:  pkgconfig(libnotify)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(libseccomp)
@@ -102,9 +93,7 @@ BuildRequires:  pkgconfig(libtasn1)
 BuildRequires:  pkgconfig(libwebp)
 BuildRequires:  pkgconfig(libwoff2dec)
 BuildRequires:  pkgconfig(libxslt)
-%if %{with gamepad}
 BuildRequires:  pkgconfig(manette-0.2)
-%endif
 BuildRequires:  pkgconfig(sqlite3)
 BuildRequires:  pkgconfig(upower-glib)
 BuildRequires:  pkgconfig(wayland-client)
@@ -215,20 +204,6 @@ files for developing applications that use JavaScript engine from webkitgtk-6.0.
   -DUSE_LIBBACKTRACE=OFF \
 %if %{without docs}
   -DENABLE_DOCUMENTATION=OFF \
-%endif
-%if !0%{?with_gamepad}
-  -DENABLE_GAMEPAD=OFF \
-%endif
-%if %{without avif}
-  -DUSE_AVIF=OFF \
-%endif
-%if %{without jpegxl}
-  -DUSE_JPEGXL=OFF \
-%endif
-%if 0%{?rhel}
-%ifarch aarch64
-  -DUSE_64KB_PAGE_BLOCK=ON \
-%endif
 %endif
   %{nil}
 
