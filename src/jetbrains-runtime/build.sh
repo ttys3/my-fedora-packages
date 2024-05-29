@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name jetbrains-runtime --release f40 mockbuild --enable-network
+fedpkg --name jetbrains-runtime --release f$(rpm -E '%fedora') mockbuild --enable-network
 
 

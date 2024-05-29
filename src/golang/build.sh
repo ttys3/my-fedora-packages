@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name golang --release f40 mockbuild --enable-network
+fedpkg --name golang --release f$(rpm -E '%fedora') mockbuild --enable-network
 
 
