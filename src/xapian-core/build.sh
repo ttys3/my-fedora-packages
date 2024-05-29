@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name xapian-core --release f40 mockbuild --enable-network
+fedpkg --name xapian-core --release f$(rpm -E '%fedora') mockbuild --enable-network
 
 

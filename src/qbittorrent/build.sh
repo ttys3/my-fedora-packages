@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name qbittorrent --release f40 mockbuild --enable-network
+fedpkg --name qbittorrent --release f$(rpm -E '%fedora') mockbuild --enable-network
 
 
