@@ -9,6 +9,11 @@ License:        BSD
 URL:            https://bellard.org/quickjs/
 Source0:	https://bellard.org/quickjs/quickjs-%{_version}.tar.xz
 
+BuildRequires: gcc
+BuildRequires: gcc-c++
+BuildRequires: make
+BuildRequires: sed
+
 %package devel
 Summary:	Development files for package %{name}
 Requires:	%{name}
