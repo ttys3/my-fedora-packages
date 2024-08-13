@@ -7,7 +7,11 @@ Release:        2
 Summary:        A small and embeddable Javascript engine
 License:        BSD
 URL:            https://bellard.org/quickjs/
-Source0:	https://bellard.org/quickjs/quickjs-%{_version}.tar.xz
+Source0:	    https://bellard.org/quickjs/quickjs-%{_version}.tar.xz
+
+Patch:      getclassid.patch
+Patch:      getpropertyvalue_uninitialized_read_fix.patch
+Patch:      unhandled_rejection.patch
 
 BuildRequires: gcc
 BuildRequires: gcc-c++
