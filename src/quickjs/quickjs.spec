@@ -1,5 +1,5 @@
 %undefine _debugsource_packages
-%global _version 2021-03-27
+%global _version 2024-01-13
 
 Name:           quickjs
 Version:        %(echo %{_version}|tr - .)
