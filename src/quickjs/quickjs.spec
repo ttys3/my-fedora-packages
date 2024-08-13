@@ -33,6 +33,9 @@ Header files and Libraries for package %{name}.
 
 %prep
 %setup -q -n quickjs-%{_version}
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
 sed -i 's|lib/quickjs|%{_lib}/quickjs|' Makefile qjsc.c
 sed -i 's|/usr/local|/usr|' Makefile
 

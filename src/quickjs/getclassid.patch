@@ -1,8 +1,10 @@
-diff --git a/quickjs/quickjs.c b/quickjs/quickjs.c
-index 48aeffc62..8afc4caa1 100644
---- a/quickjs/quickjs.c
-+++ b/quickjs/quickjs.c
-@@ -54034,3 +54034,14 @@ void JS_AddIntrinsicTypedArrays(JSContext *ctx)
+commit 133d4fd3b8627c934771dc50fd9dcc7e948a7b4f
+
+diff --git a/quickjs.c b/quickjs.c
+index 4e58a98..9e46a12 100644
+--- a/quickjs.c
++++ b/quickjs.c
+@@ -55544,3 +55544,14 @@ void JS_AddIntrinsicTypedArrays(JSContext *ctx)
      JS_AddIntrinsicAtomics(ctx);
  #endif
  }
@@ -17,11 +19,11 @@ index 48aeffc62..8afc4caa1 100644
 +    assert(p != 0);
 +    return p->class_id;
 +}
-diff --git a/quickjs/quickjs.h b/quickjs/quickjs.h
-index d4a5cd311..054019147 100644
---- a/quickjs/quickjs.h
-+++ b/quickjs/quickjs.h
-@@ -497,6 +497,7 @@ typedef struct JSClassDef {
+diff --git a/quickjs.h b/quickjs.h
+index 700ee61..4cc0d2b 100644
+--- a/quickjs.h
++++ b/quickjs.h
+@@ -500,6 +500,7 @@ typedef struct JSClassDef {
  } JSClassDef;
  
  JSClassID JS_NewClassID(JSClassID *pclass_id);
