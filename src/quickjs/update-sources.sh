@@ -2,6 +2,6 @@
 
 set -eou pipefail
 
-fedpkg --name pack new-sources --offline v*.tar.gz
+fedpkg --name pack new-sources --offline quickjs*.tar.xz
 
 

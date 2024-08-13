@@ -1,18 +1,17 @@
 %undefine _debugsource_packages
-%global _version 0.5.0
+%global _version 2024-01-13
 
 Name:           quickjs
-Version:        %{_version}
+Version:        %(echo %{_version}|tr - .)
 Release:        2
 Summary:        A small and embeddable Javascript engine
 License:        BSD
-URL:            https://github.com/quickjs-ng/quickjs
-Source0:	    https://github.com/quickjs-ng/quickjs/archive/refs/tags/v%{_version}.tar.gz
+URL:            https://bellard.org/quickjs/
+Source0:	https://bellard.org/quickjs/quickjs-%{_version}.tar.xz
 
 BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: make
-BuildRequires: cmake
 BuildRequires: sed
 
 %package devel
@@ -30,23 +29,23 @@ Header files and Libraries for package %{name}.
 
 %prep
 %setup -q -n quickjs-%{_version}
+sed -i 's|lib/quickjs|%{_lib}/quickjs|' Makefile qjsc.c
+sed -i 's|/usr/local|/usr|' Makefile
 
 %build
-# ref https://docs.fedoraproject.org/en-US/packaging-guidelines/CMake/
-%cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_INCLUDEDIR=/usr/include/quickjs -DCMAKE_INSTALL_LIBDIR=/usr/lib64
-%cmake_build
+%make_build
 
 %install
-%cmake_install
+%make_install
 
 %files
-%doc LICENSE doc/*
+%doc Changelog LICENSE doc/*
 %{_bindir}/*
 
 %files devel
-%exclude /usr/share/doc/quickjs/examples/*
-%{_includedir}/*
-%{_libdir}/*
+%doc examples
+%{_includedir}/%{name}
+%{_libdir}/%{name}
 
 %changelog
 * Tue Jan 17 2023 Zephyr Lykos <fedora@mochaa.ws> - 2021.03.27-2
