@@ -5,6 +5,9 @@
         mkdir -p _license_files ; \
         cp -p %1 _license_files/$(echo '%1' | sed -e 's!/!.!g')
 
+## disable lto
+%global _lto_cflags %{nil}
+
 # Build documentation by default (use `rpmbuild --without docs` to override it).
 # This is used by Coverity. Coverity injects custom compiler warnings, but
 # any warning during WebKit docs build is fatal!
@@ -17,7 +20,7 @@
 %endif
 
 Name:           webkitgtk
-Version:        2.44.2
+Version:        2.44.3
 Release:        %autorelease
 Summary:        GTK web content engine library
 
@@ -282,6 +285,10 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Fri Aug 16 2024 ttyS3 <ttys3.rust@gmail.com> 2.44.3-1
+- fix(build): use dynamic fedora release version in build scripts
+  (ttys3.rust@gmail.com)
+
 * Thu May 16 2024 ttyS3 <ttys3.rust@gmail.com> 2.44.2-1
 -
 
