@@ -5,9 +5,6 @@
         mkdir -p _license_files ; \
         cp -p %1 _license_files/$(echo '%1' | sed -e 's!/!.!g')
 
-## disable lto
-%global _lto_cflags %{nil}
-
 # Build documentation by default (use `rpmbuild --without docs` to override it).
 # This is used by Coverity. Coverity injects custom compiler warnings, but
 # any warning during WebKit docs build is fatal!
@@ -21,7 +18,7 @@
 
 Name:           webkitgtk
 Version:        2.44.3
-Release:        %autorelease
+Release:        2%{?dist}
 Summary:        GTK web content engine library
 
 License:        LGPLv2
@@ -36,7 +33,8 @@ Source2:        webkitgtk-keys.gpg
 Patch:         PasteboardGtk-legacy-clipboard-image-paste.patch
 Patch:         EnlargeObjectSize.patch
 Patch:         fix-FileReader-readAsDataURL-can-not-read-blob-issue.patch
-
+Patch:         clang-with-LTO-enabled-segfaults-workaround.patch
+Patch:         jsc-WasmBBQJIT-crash-workaround.patch
 
 BuildRequires:  bison
 BuildRequires:  bubblewrap
@@ -285,6 +283,9 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Fri Aug 16 2024 ttyS3 <ttys3.rust@gmail.com> 2.44.4-1
+-
+
 * Fri Aug 16 2024 ttyS3 <ttys3.rust@gmail.com> 2.44.3-1
 - fix(build): use dynamic fedora release version in build scripts
   (ttys3.rust@gmail.com)
