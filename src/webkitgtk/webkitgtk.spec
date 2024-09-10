@@ -283,6 +283,11 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Wed Sep 11 2024 ttyS3 <41882455+ttys3@users.noreply.github.com> 2.44.4-2
+- chore: update webkitgtk to version 2.44.4 (41882455+ttys3@users.noreply.github.com)
+- chore: do not clean as build webkitgtk from clean will take lots of time
+  (41882455+ttys3@users.noreply.github.com)
+
 * Fri Aug 16 2024 ttyS3 <41882455+ttys3@users.noreply.github.com> 2.44.4-1
 -
 
