@@ -1,17 +1,17 @@
-commit 0341a0189f319ac615880da7ad96c9fe8c8345a1
+commit 3a8561585e96955e8ad53965cfe4155c89c7786a
 Author: ttyS3 <ttys3.rust@gmail.com>
-Date:   Tue Mar 26 18:23:45 2024 +0000
+Date:   2024-09-25 02:13:04 +0000
 
     fix-FileReader-readAsDataURL-can-not-read-blob-issue.patch
 
 diff --git a/Source/WebCore/loader/MixedContentChecker.cpp b/Source/WebCore/loader/MixedContentChecker.cpp
-index f0762ab4..9cb0f694 100644
+index dc59323a..57194378 100644
 --- a/Source/WebCore/loader/MixedContentChecker.cpp
 +++ b/Source/WebCore/loader/MixedContentChecker.cpp
-@@ -94,6 +94,15 @@ bool MixedContentChecker::frameAndAncestorsCanDisplayInsecureContent(LocalFrame&
+@@ -129,6 +129,15 @@ static bool frameAndAncestorsCanDisplayInsecureContent(LocalFrame& frame, MixedC
          return false;
  
-     bool allowed = !document->isStrictMixedContentMode() && (frame.settings().allowDisplayOfInsecureContent() || type == ContentType::ActiveCanWarn) && !frame.document()->geolocationAccessed();
+     bool allowed = !document->isStrictMixedContentMode() && (frame.settings().allowDisplayOfInsecureContent() || type == MixedContentChecker::ContentType::ActiveCanWarn) && !frame.document()->geolocationAccessed();
 +    // assume AlwaysDisplayInNonStrictMode::Yes like the old one (2.40.x)
 +    // fix error introduced by https://github.com/WebKit/WebKit/commit/04bd941e62cbadecdc889fb575315ffd142756e4:
 +    // [blocked] The page at https://xxx.example.com/messenger/ was not allowed to display insecure content from blob:https://xxx.example.com/bcfd36b0-569e-4038-ac2f-e5e9825b1295.
@@ -21,6 +21,6 @@ index f0762ab4..9cb0f694 100644
 +        WTFLogAlways("xxoo allowed due to not StrictMixedContentMode and AlwaysDisplayInNonStrictMode::Yes");
 +        allowed = true;
 +    }
-     logWarning(frame, allowed, "display"_s, url);
+     logConsoleWarning(frame, allowed, "display"_s, url);
  
      if (allowed) {

@@ -1,11 +1,11 @@
-commit 8ba0491551d32f35317aa9c0d35ffbadde431f7e
+commit f2431cf0feb81135c07e6a22db5a100b4faadc4a
 Author: ttyS3 <ttys3.rust@gmail.com>
-Date:   Tue Mar 26 18:19:09 2024 +0000
+Date:   2024-09-25 02:06:22 +0000
 
     PasteboardGtk-legacy-clipboard-image-paste.patch
 
 diff --git a/Source/WebCore/platform/gtk/PasteboardGtk.cpp b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
-index c89f4a12..f6e4be35 100644
+index cb63fc7c..084e90da 100644
 --- a/Source/WebCore/platform/gtk/PasteboardGtk.cpp
 +++ b/Source/WebCore/platform/gtk/PasteboardGtk.cpp
 @@ -328,9 +328,30 @@ void Pasteboard::read(PasteboardFileReader& reader, std::optional<size_t> index)
