@@ -281,6 +281,10 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Wed Sep 25 2024 ttyS3 <ttys3.rust@gmail.com> 2.46.0-2
+- fix: make patch compatible with webkitgtk 2.46.0 (ttys3.rust@gmail.com)
+- chore: update webkitgtk version to 2.46.0 (ttys3.rust@gmail.com)
+
 * Wed Sep 11 2024 ttyS3 <ttys3.rust@gmail.com> 2.44.4-2
 - chore: update webkitgtk to version 2.44.4 (ttys3.rust@gmail.com)
 - chore: do not clean as build webkitgtk from clean will take lots of time
