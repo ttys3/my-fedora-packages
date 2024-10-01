@@ -17,7 +17,7 @@
 %endif
 
 Name:           webkitgtk
-Version:        2.46.0
+Version:        2.46.1
 Release:        2%{?dist}
 Summary:        GTK web content engine library
 
@@ -281,6 +281,9 @@ export NINJA_STATUS=" 🟠🟠🟠🟠 [1/1][%f/%t %es] "
 %endif
 
 %changelog
+* Wed Oct 02 2024 ttyS3 <ttys3.rust@gmail.com> 2.46.1-2
+-
+
 * Wed Sep 25 2024 ttyS3 <ttys3.rust@gmail.com> 2.46.0-2
 - fix: make patch compatible with webkitgtk 2.46.0 (ttys3.rust@gmail.com)
 - chore: update webkitgtk version to 2.46.0 (ttys3.rust@gmail.com)
