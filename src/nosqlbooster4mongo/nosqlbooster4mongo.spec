@@ -72,6 +72,10 @@ find "%{buildroot}/opt/%{name}" -type d -exec chmod 755 {} +
 /usr/share/icons/hicolor/512x512/apps/%{name}.png
 
 %changelog
+* Wed Feb 26 2025 ttyS3 <41882455+ttys3@users.noreply.github.com>
+- fix: find-debuginfo: starting ... Extracting debug info from 17 files ***
+  ERROR: No build ID note found in xxx (41882455+ttys3@users.noreply.github.com)
+
 * Wed Feb 26 2025 ttyS3 <41882455+ttys3@users.noreply.github.com> 9.1.6-1
 - fix(build): use dynamic fedora release version in build scripts
   (41882455+ttys3@users.noreply.github.com)
