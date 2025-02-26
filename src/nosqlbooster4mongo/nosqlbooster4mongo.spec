@@ -21,6 +21,9 @@ BuildArch: x86_64
 Requires: GConf2
 Requires: libnotify
 
+# Disable debug package
+%global debug_package %{nil}
+
 # https://bugzilla.redhat.com/show_bug.cgi?id=1869423
 %global __filter_GLIBC_PRIVATE 1
 # do not call strip
