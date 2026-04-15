@@ -1,3 +1,9 @@
+* Wed Apr 15 2026 ttyS3 <ttys3.rust@gmail.com> - 14.0~rc1-1
+- Update to 14.0.rc1 (upstream release candidate)
+- Drop 0001-fix-copy-failures.patch (merged upstream as flameshot-org/flameshot#4363)
+- Bump bundled Qt-Color-Widgets to 5d52e907e5 (still 2.2.0)
+- Pass -DDISABLE_UPDATE_CHECKER=ON
+
 * Fri Aug 15 2025 Shawn W Dunn <sfalken@opensuse.org> - 13.0.1-3
 - Added Requires: grim
 

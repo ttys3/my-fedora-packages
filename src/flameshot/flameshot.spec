@@ -1,12 +1,22 @@
 # Qt-Color-Widgets and kdsingleapplication are linked statically within
 # flameshot, the standard upstream build systemd does this via a git clone
 # as part of the build process
-%global qtcolor_commit 352bc8f99bf2174d5724ee70623427aa31ddc26a
+%global qtcolor_commit 5d52e907e50dc88cf969b41cea44665ff6c475b1
 %global qtcolor_url https://gitlab.com/mattbas/Qt-Color-Widgets
 
+# Upstream tag is v14.0.rc1 (pre-release); Fedora Version uses ~rc1 for
+# correct sorting against future 14.0 final, but the GitHub archive keeps
+# the literal tag string, so Source0 uses %{src_tag}.
+# (Do not name this variable %%forgeversion: that is a reserved lua macro
+# from forge-srpm-macros and will collide.)
+# version0 is required by %%autorelease -p and is the eventual stable
+# target version that %%version sorts lower than.
+%global src_tag 14.0.rc1
+%global version0 14.0
+
 Name: flameshot
-Version: 13.3.0
-Release: %autorelease
+Version: %{version0}~rc1
+Release: %autorelease -p
 
 # Main code: GPL-3.0-or-later
 # Logo: LAL-1.3
@@ -18,13 +28,8 @@ Release: %autorelease
 License: GPL-3.0-or-later AND Apache-2.0 AND GPL-2.0-only AND LGPL-3.0-or-later AND (LGPL-3.0-only OR GPL-3.0-only) AND LAL-1.3
 Summary: Powerful and simple to use screenshot software
 URL: https://github.com/flameshot-org/%{name}
-Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source0: %{url}/archive/v%{src_tag}/%{name}-%{src_tag}.tar.gz
 Source1: %{qtcolor_url}/-/archive/%{qtcolor_commit}/Qt-Color-Widgets-%{qtcolor_commit}.tar.gz
-
-# Upstream Patches
-# See: https://github.com/flameshot-org/flameshot/pull/4363
-# Drop in next stable release, most likely
-Patch0:        0001-fix-copy-failures.patch
 
 BuildRequires: cmake(KDSingleApplication-qt6)
 BuildRequires: cmake(KF6GuiAddons)
@@ -65,7 +70,7 @@ Powerful and simple to use screenshot software with built-in
 editor with advanced features.
 
 %prep
-%autosetup -p1
+%autosetup -n %{name}-%{src_tag} -p1
 mkdir -p external/Qt-Color-Widgets
 tar -xf %{SOURCE1} -C external/Qt-Color-Widgets --strip-components=1
 
@@ -77,7 +82,8 @@ export CMAKE_POLICY_VERSION_MINIMUM=3.5
     -DUSE_BUNDLED_KDSINGLEAPPLICATION:BOOL=OFF \
     -DUSE_WAYLAND_CLIPBOARD:BOOL=ON \
     -DBUILD_SHARED_LIBS:BOOL=OFF \
-    -DUSE_LAUNCHER_ABSOLUTE_PATH:BOOL=OFF
+    -DUSE_LAUNCHER_ABSOLUTE_PATH:BOOL=OFF \
+    -DDISABLE_UPDATE_CHECKER:BOOL=ON
 %cmake_build
 
 %install
