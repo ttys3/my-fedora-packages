@@ -200,6 +200,13 @@ This package contains the documentation for %{name}.
 %{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
 %autosetup -p1 -a3
 
+%if 0%{?epel}
+# AlmaLinux/EL 10 ships Go 1.25; relax the go.mod 1.26 requirement to build with it.
+sed -i -e 's/^go 1\.26\.0$/go 1.25.0/' -e '/^toolchain /d' go.mod
+# errors.AsType is Go 1.26 only; rewrite its single use with the 1.25-compatible errors.As.
+sed -i 's|if exit_err, ok := errors.AsType\[\*exec.ExitError\](err); ok {|var exit_err *exec.ExitError\n\t\tif errors.As(err, \&exit_err) {|' kittens/ssh/main.go
+%endif
+
 mkdir fonts
 tar -xf %{SOURCE6} -C fonts
 
