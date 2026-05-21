@@ -8,7 +8,7 @@
 %endif
 
 Name:           kitty
-Version:        0.46.2
+Version:        0.47.0
 Release:        %autorelease
 Summary:        Cross-platform, fast, feature full, GPU based terminal emulator
 
@@ -174,7 +174,7 @@ Recommends:     %{name}-kitten
 %package        kitten
 Summary:        The kitten executable
 # Generated with go-vendor-tools
-%global kitten_license Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND GPL-3.0-only AND MIT
+%global kitten_license Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND GPL-3.0-only AND MIT AND OFL-1.1
 License:        %{kitten_license}
 
 %description    kitten
