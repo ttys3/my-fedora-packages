@@ -1,4 +1,4 @@
-From 24838eb236040751bfbe92d079bada06859dc690 Mon Sep 17 00:00:00 2001
+From dc36e2165458af235a257c662e421cad135aeda0 Mon Sep 17 00:00:00 2001
 From: ttyS3 <41882455+ttys3@users.noreply.github.com>
 Date: Wed, 10 Jun 2026 02:36:19 +0000
 Subject: [PATCH] fix(tabs): mouse handling stuck after aborted tab drag on
@@ -35,11 +35,11 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 ---
  glfw/wl_init.c     |  8 ++++++++
  glfw/wl_platform.h |  6 ++++++
- glfw/wl_window.c   | 12 +++++++++++-
+ glfw/wl_window.c   | 13 ++++++++++++-
  kitty/boss.py      |  7 ++++---
- kitty/mouse.c      | 11 +++++++++++
- kitty/tabs.py      | 16 ++++++++++++++--
- 6 files changed, 54 insertions(+), 6 deletions(-)
+ kitty/mouse.c      | 13 +++++++++++++
+ kitty/tabs.py      | 17 +++++++++++++++--
+ 6 files changed, 58 insertions(+), 6 deletions(-)
 
 diff --git a/glfw/wl_init.c b/glfw/wl_init.c
 index edfe97a96..6741fa528 100644
@@ -85,10 +85,10 @@ index e294a06ad..af17d12a4 100644
      int32_t                     keyboardRepeatRate;
      monotonic_t                 keyboardRepeatDelay;
 diff --git a/glfw/wl_window.c b/glfw/wl_window.c
-index d8cc01a6a..55b9cea09 100644
+index d8cc01a6a..abb586f41 100644
 --- a/glfw/wl_window.c
 +++ b/glfw/wl_window.c
-@@ -3491,6 +3491,16 @@ _glfwPlatformStartDrag(_GLFWwindow* window, const GLFWimage* thumbnail) {
+@@ -3496,6 +3496,17 @@ _glfwPlatformStartDrag(_GLFWwindow* window, const GLFWimage* thumbnail) {
          return ENOTSUP;
      }
  
@@ -97,15 +97,16 @@ index d8cc01a6a..55b9cea09 100644
 +        // without one the compositor silently ignores the request and the
 +        // data source never receives any events, so fail early instead.
 +        // This can happen as drags are started asynchronously and the button
-+        // may have been released by the time we get here.
++        // may have been released by the time we get here. EPERM matches what
++        // start_window_drag() in kitty/glfw.c reports for this situation.
 +        _glfwInputError(GLFW_PLATFORM_ERROR, "Wayland: Refusing to start drag without an active pointer implicit grab");
-+        return EAGAIN;
++        return EPERM;
 +    }
 +
-     if (!_glfw.wl.dataDevice) {
-         _glfwInputError(GLFW_PLATFORM_ERROR, "Wayland: Data device not available");
-         return ENOTSUP;
-@@ -3568,7 +3578,7 @@ _glfwPlatformStartDrag(_GLFWwindow* window, const GLFWimage* thumbnail) {
+     // Create the data source
+     _glfw.wl.drag.source = wl_data_device_manager_create_data_source(_glfw.wl.dataDeviceManager);
+     if (!_glfw.wl.drag.source) {
+@@ -3568,7 +3579,7 @@ _glfwPlatformStartDrag(_GLFWwindow* window, const GLFWimage* thumbnail) {
      wl_data_device_start_drag(
          _glfw.wl.dataDevice, _glfw.wl.drag.source, window->wl.surface,
          _glfw.wl.drag.toplevel_drag ? NULL : _glfw.wl.drag.drag_icon,
@@ -140,10 +141,10 @@ index 2e5cbe8cd..ece948347 100644
  
      @ac('win', '''
 diff --git a/kitty/mouse.c b/kitty/mouse.c
-index 4e6682ecb..e87da6bf8 100644
+index 4e6682ecb..5c7557d92 100644
 --- a/kitty/mouse.c
 +++ b/kitty/mouse.c
-@@ -957,6 +957,17 @@ static void
+@@ -957,6 +957,19 @@ static void
  handle_tab_bar_mouse(int button, int modifiers, int action) {
      set_currently_hovered_window(0, modifiers);
      OSWindow *w = global_state.callback_os_window;
@@ -156,13 +157,15 @@ index 4e6682ecb..e87da6bf8 100644
 +        // Clear the drag state so mouse handling is not redirected to the tab
 +        // bar forever, and swallow the release as it ended an aborted drag.
 +        zero_at_ptr(&global_state.tab_being_dragged);
++        // re-render the tab bar in case it was drawn without the dragged tab
++        if (w) w->tab_bar_data_updated = false;
 +        return;
 +    }
      // dont report motion events, as they are expensive and useless
      if (w && (button > -1 || global_state.tab_being_dragged.id)) {
          call_boss(handle_tab_bar_mouse, "Kddiii", w->id, w->mouse_x, w->mouse_y, button, modifiers, action);
 diff --git a/kitty/tabs.py b/kitty/tabs.py
-index 28f86a5e0..6cd40fd0c 100644
+index 28f86a5e0..04e8a8266 100644
 --- a/kitty/tabs.py
 +++ b/kitty/tabs.py
 @@ -1732,6 +1732,9 @@ def on_tab_drop(self, x: int, y: int, bypass_move: bool = False) -> None:
@@ -175,7 +178,7 @@ index 28f86a5e0..6cd40fd0c 100644
              return
          if not bypass_move:
              self.on_tab_drop_move(td.data.tab_id, True, x, y)
-@@ -1779,7 +1782,11 @@ def start_tab_drag(self, pixels: bytes, width: int, height: int) -> None:
+@@ -1779,7 +1782,12 @@ def start_tab_drag(self, pixels: bytes, width: int, height: int) -> None:
                  drag_data = {
                      f'application/net.kovidgoyal.kitty-tab-{os.getpid()}': str(tab.id).encode(),
                  }
@@ -185,10 +188,11 @@ index 28f86a5e0..6cd40fd0c 100644
 +                except OSError as e:
 +                    log_error(f'Failed to start tab drag: {e}')
 +                    set_tab_being_dragged()
++                    self.mark_tab_bar_dirty()  # re-render the tab bar in case it was drawn without the dragged tab
                  break
          else:
              set_tab_being_dragged()
-@@ -1797,16 +1804,21 @@ def handle_tab_bar_mouse(self, x: float, y: float, button: int, modifiers: int,
+@@ -1797,16 +1805,21 @@ def handle_tab_bar_mouse(self, x: float, y: float, button: int, modifiers: int,
  
          tab_id_at_x = self.tab_bar.tab_id_at(int(x))
          self.recent_tab_bar_mouse_events.add(button, modifiers, action, x, y, tab_id_at_x)
