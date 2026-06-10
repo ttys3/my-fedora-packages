@@ -35,6 +35,10 @@ Source4:        go-vendor-tools.toml
 Source5:        https://raw.githubusercontent.com/kovidgoyal/kitty/46c0951751444e4f4994008f0d2dcb41e49389f4/kitty/data/%{name}.appdata.xml
 Source6:        https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/NerdFontsSymbolsOnly.tar.xz
 
+# Fix mouse handling getting stuck after an aborted tab drag on Wayland
+# https://github.com/kovidgoyal/kitty/issues/XXXX
+Patch0:         0001-fix-tabs-mouse-handling-stuck-after-aborted-tab-drag.patch
+
 # https://fedoraproject.org/wiki/Changes/EncourageI686LeafRemoval
 ExcludeArch:    %{ix86}
 
