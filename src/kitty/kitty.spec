@@ -8,7 +8,7 @@
 %endif
 
 Name:           kitty
-Version:        0.47.2
+Version:        0.47.3
 Release:        %autorelease
 Summary:        Cross-platform, fast, feature full, GPU based terminal emulator
 
@@ -35,13 +35,12 @@ Source4:        go-vendor-tools.toml
 Source5:        https://raw.githubusercontent.com/kovidgoyal/kitty/46c0951751444e4f4994008f0d2dcb41e49389f4/kitty/data/%{name}.appdata.xml
 Source6:        https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/NerdFontsSymbolsOnly.tar.xz
 
-# Fix mouse handling getting stuck after an aborted tab drag on Wayland
-# https://github.com/kovidgoyal/kitty/issues/XXXX
-Patch0:         0001-fix-tabs-mouse-handling-stuck-after-aborted-tab-drag.patch
-# Follow-up: detect start_drag silently ignored by the compositor (TOCTOU race
-# left over by the previous patch: stale client-side implicit grab view), which
-# still deadlocked mouse handling and left a stray drag toplevel window
-Patch1:         0002-fix-wayland-detect-start_drag-silently-ignored-by-th.patch
+# Follow-up to the upstream aborted-tab-drag fix (commit dc36e21, merged via
+# PR #10136 and released in 0.47.3): detect start_drag silently ignored by the
+# compositor (TOCTOU race from the stale client-side implicit grab view), which
+# still deadlocked mouse handling and left a stray drag toplevel window.
+# Not yet upstreamed.
+Patch0:         0001-fix-wayland-detect-start_drag-silently-ignored-by-th.patch
 
 # https://fedoraproject.org/wiki/Changes/EncourageI686LeafRemoval
 ExcludeArch:    %{ix86}
