@@ -14,6 +14,8 @@ FEDORA_REL=$(rpm -E '%fedora')
 ARCH=$(rpm -E '%_arch')
 UPSTREAM_TARBALL="kitty-${VERSION}.tar.xz"
 VENDOR_TARBALL="kitty-vendor.tar.xz"
+MOCK_ROOT="fedora-${FEDORA_REL}-${ARCH}"
+RESULT_DIR="/var/lib/mock/${MOCK_ROOT}/result"
 
 echo ">>> kitty ${VERSION} on fedora-${FEDORA_REL}-${ARCH}"
 
@@ -30,6 +32,8 @@ SRPM=$(ls -1t ./*.src.rpm | head -n1)
 echo "    SRPM: ${SRPM}"
 
 echo ">>> [4/4] mock --rebuild"
-mock -r "fedora-${FEDORA_REL}-${ARCH}" --enable-network --rebuild "${SRPM}" "$@"
+mock -r "${MOCK_ROOT}" --enable-network --rebuild "${SRPM}" "$@"
 
 echo ">>> done"
+echo ">>> build artifacts in ${RESULT_DIR}"
+ls -1 "${RESULT_DIR}"/*.rpm 2>/dev/null | grep -v '\.src\.rpm$' | sed 's/^/    /' || true
