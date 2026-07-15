@@ -8,7 +8,7 @@
 %endif
 
 Name:           kitty
-Version:        0.47.3
+Version:        0.47.4
 Release:        %autorelease
 Summary:        Cross-platform, fast, feature full, GPU based terminal emulator
 
