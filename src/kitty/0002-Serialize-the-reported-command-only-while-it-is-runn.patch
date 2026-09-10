@@ -1,0 +1,51 @@
+From 9cfe10b4c22e644e3b503db40f424c8ab2617c70 Mon Sep 17 00:00:00 2001
+From: ttyS3 <41882455+ttys3@users.noreply.github.com>
+Date: Thu, 10 Sep 2026 13:35:48 +0000
+Subject: [PATCH 2/3] Serialize the reported command only while it is running
+
+save_as_session --use-foreground-process used last_cmd_cmdline whenever the
+cursor was not at a prompt. But last_cmd_cmdline is kept after the command
+finishes, and the cursor is also not at a prompt when it is hidden, when the
+alternate screen is active or when no prompt mark is visible above it, so a
+finished command could be recorded and would then be run again on restore.
+Use it only between the OSC 133 C mark and the D or A mark that ends the
+command, also for the ssh kitten.
+
+When the reported command is the one the shell was asked to run at startup,
+serialize it as it was specified, so that a list stays a list rather than
+becoming a command line quoted for one particular shell.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01EF1vyDbXcwbtqaBJu8uar4
+---
+ kitty/window.py | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/kitty/window.py b/kitty/window.py
+index 3361a22c2..64c5de405 100644
+--- a/kitty/window.py
++++ b/kitty/window.py
+@@ -2424,12 +2424,18 @@ def make_exe_absolute(cmd: list[str], pid: int) -> None:
+                     if self.screen.last_reported_cwd:
+                         set_cwd_in_cmdline(path_from_osc7_url(self.screen.last_reported_cwd), kssh_cmdline)
+                 else:
+-                    if self.last_cmd_cmdline:
++                    if self.last_cmd_cmdline and self.last_cmd_output_start_time:
+                         set_single_env_var_in_cmdline('KITTY_SI_RUN_COMMAND_AT_STARTUP', self.last_cmd_cmdline, kssh_cmdline)
+                 unserialize_data['cmd_at_shell_startup'] = kssh_cmdline
+             elif not self.at_prompt:
+-                if self.last_cmd_cmdline:
++                if self.last_cmd_cmdline and self.last_cmd_output_start_time:
++                    # the shell has told us it is running this command and not that it has finished
+                     unserialize_data['cmd_at_shell_startup'] = self.last_cmd_cmdline
++                    scmd = self.child.startup_command_via_shell_integration
++                    if scmd and not isinstance(scmd, str) and self.last_cmd_cmdline == self.child.final_env.get('KITTY_SI_RUN_COMMAND_AT_STARTUP'):
++                        # it is the command it was asked to run at startup, keep it as it was specified
++                        # rather than as joined into a command line for this particular shell
++                        unserialize_data['cmd_at_shell_startup'] = list(scmd)
+                 elif self.child.pid != (pid := self.child.pid_for_cwd) and pid is not None:
+                     # we have a shell running some command
+                     with suppress(Exception):
+-- 
+2.55.0
+

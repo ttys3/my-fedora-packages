@@ -35,6 +35,14 @@ Source4:        go-vendor-tools.toml
 Source5:        https://raw.githubusercontent.com/kovidgoyal/kitty/46c0951751444e4f4994008f0d2dcb41e49389f4/kitty/data/%{name}.appdata.xml
 Source6:        https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/NerdFontsSymbolsOnly.tar.xz
 
+# Keep the command of windows restored from a session when saving it again with
+# save_as_session --use-foreground-process, instead of degrading it into a helper
+# process of that command (e.g. claude --resume turning into its socat relay)
+# Not yet submitted upstream
+Patch0:         0001-Mark-the-command-run-at-shell-startup-with-OSC-133-c.patch
+Patch1:         0002-Serialize-the-reported-command-only-while-it-is-runn.patch
+Patch2:         0003-Serialize-the-command-a-shell-runs-rather-than-its-n.patch
+
 # https://fedoraproject.org/wiki/Changes/EncourageI686LeafRemoval
 ExcludeArch:    %{ix86}
 

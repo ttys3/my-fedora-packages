@@ -1,0 +1,159 @@
+From 7e0e59c4b36548dea14335076da388408268ea60 Mon Sep 17 00:00:00 2001
+From: ttyS3 <41882455+ttys3@users.noreply.github.com>
+Date: Thu, 10 Sep 2026 13:35:01 +0000
+Subject: [PATCH 1/3] Mark the command run at shell startup with OSC 133
+ command marks
+
+The shell integration scripts run the command of a window restored from a
+session by eval-ing KITTY_SI_RUN_COMMAND_AT_STARTUP, which bypasses the hooks
+that emit OSC 133;C and D for typed commands. kitty therefore never learned
+what such a window was running: at_prompt, notify_on_cmd_finish, the command
+duration and, most visibly, the command recorded by save_as_session
+--use-foreground-process were all wrong for it. The latter falls back to
+inspecting the foreground process group and records whichever helper the
+command spawned last, so every save/restore cycle degraded the window further.
+
+Emit the marks around the eval with the same encoding as for typed commands
+and, like for those, only when prompts are being marked. fish >= 4 marks
+prompts itself regardless of the shell_integration option, so for it check its
+mark-prompt feature instead. The exit status is captured right after the eval,
+before the conditionals can clobber it.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01EF1vyDbXcwbtqaBJu8uar4
+---
+ kitty_tests/shell_integration.py              | 27 +++++++++++++++++++
+ shell-integration/bash/kitty.bash             |  8 ++++++
+ .../kitty-shell-integration.fish              | 15 +++++++++++
+ shell-integration/zsh/kitty-integration       |  8 ++++++
+ 4 files changed, 58 insertions(+)
+
+diff --git a/kitty_tests/shell_integration.py b/kitty_tests/shell_integration.py
+index 4a340df3a..f8986db86 100644
+--- a/kitty_tests/shell_integration.py
++++ b/kitty_tests/shell_integration.py
+@@ -275,6 +275,22 @@ def redrawn():
+             pty.wait_till(lambda: 'XXX' in pty.screen_contents())
+             self.assertIn('pre-start', pty.screen_contents())
+             self.assertTrue(pty.screen_contents().startswith('pre-start'))
++            self.assert_command(pty, 'echo pre-start')
++        self.startup_command_marking_tests()
++
++    def startup_command_marking_tests(self, shell='zsh', rc='PS1=XXX', unmarked_cmd=''):
++        with self.run_shell(shell=shell, rc=rc, extra_env={'KITTY_SI_RUN_COMMAND_AT_STARTUP': 'echo "a  b" && false'}) as pty:
++            pty.wait_till(lambda: 'XXX' in pty.screen_contents())
++            self.assert_command(pty, 'echo "a  b" && false', exit_status=1)
++        # the startup command must not be marked when prompts are not
++        env = {'KITTY_SI_RUN_COMMAND_AT_STARTUP': 'echo pre-start'}
++        if not unmarked_cmd:
++            if self.with_kitten:  # kitten run-shell does not use KITTY_SHELL_INTEGRATION from the environment
++                return
++            env['KITTY_SHELL_INTEGRATION'] = 'no-prompt-mark'
++        with self.run_shell(shell=shell, rc=rc, cmd=unmarked_cmd, extra_env=env) as pty:
++            pty.wait_till(lambda: 'XXX' in pty.screen_contents())
++            self.ae(pty.callbacks.last_cmd_cmdline, '')
+ 
+     @unittest.skipUnless(shutil.which('fish'), 'fish not installed')
+     def test_fish_integration(self):
+@@ -295,6 +311,7 @@ def test_fish_integration(self):
+             q = 'XXX\n' + fish_prompt + ' ' * (pty.screen.columns - len(fish_prompt) - len(right_prompt)) + right_prompt
+             pty.wait_till(lambda: pty.screen_contents().count(right_prompt) == 1)
+             self.ae(pty.screen_contents(), q)
++            self.assert_command(pty, 'echo XXX')
+ 
+             # shell integration dir must not be in XDG_DATA_DIRS
+             cmd = f'string match -q -- "*{shell_integration_dir}*" "$XDG_DATA_DIRS" || echo "XDD_OK"'
+@@ -368,6 +385,14 @@ def redrawn():
+ 
+             pty.send_cmd_to_child('exit')
+ 
++        # fish >= 4 marks prompts itself, regardless of the shell_integration option
++        fish_marks_prompts = subprocess.run(['fish', '--no-config', '-c', 'status test-feature mark-prompt']).returncode != 2
++        self.startup_command_marking_tests(
++            'fish',
++            rc='set -g fish_greeting\nfunction fish_prompt; echo -n XXX; end',
++            unmarked_cmd='fish --features no-mark-prompt' if fish_marks_prompts else '',
++        )
++
+     def assert_command(self, pty, cmd='', exit_status=0):
+         cmd = cmd or pty.last_cmd
+         pty.wait_till(lambda: pty.callbacks.last_cmd_exit_status == exit_status, timeout_msg=lambda: f'{pty.callbacks.last_cmd_exit_status=} != {exit_status}')
+@@ -475,6 +500,8 @@ def redrawn():
+             pty.wait_till(lambda: 'XXX' in pty.screen_contents())
+             self.assertIn('pre-start', pty.screen_contents())
+             self.assertTrue(pty.screen_contents().startswith('pre-start'))
++            self.assert_command(pty, 'echo pre-start')
++        self.startup_command_marking_tests('bash')
+         # test startup file sourcing
+ 
+         def setup_env(excluded, argv, home_dir, rc='', shell='bash', with_kitten=self.with_kitten):
+diff --git a/shell-integration/bash/kitty.bash b/shell-integration/bash/kitty.bash
+index f1a5a75db..64c4da1e7 100644
+--- a/shell-integration/bash/kitty.bash
++++ b/shell-integration/bash/kitty.bash
+@@ -366,7 +366,15 @@ _ksi_main() {
+     builtin unset KITTY_IS_CLONE_LAUNCH KITTY_CLONE_SOURCE_STRATEGIES
+     if [[ -n "$krcs" ]]; then builtin
+         builtin printf "\e]2;%s\a" "${krcs//[[:cntrl:]]}" # removes any control characters
++        # eval bypasses PS0 and PS1 so mark the command explicitly, as for a typed one
++        if [[ "${_ksi_prompt[mark]}" == "y" ]]; then
++            builtin printf "\e]133;C;cmdline=%q\a" "$krcs"
++        fi
+         eval "$krcs";
++        builtin local krcs_status=$?  # declared after eval so as to not be visible to it
++        if [[ "${_ksi_prompt[mark]}" == "y" ]]; then
++            builtin printf "\e]133;D;%s\a" "$krcs_status"
++        fi
+     fi
+ }
+ _ksi_main
+diff --git a/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish b/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish
+index e2637d5fa..9369d661b 100644
+--- a/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish
++++ b/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish
+@@ -29,7 +29,22 @@ if test -n "$KITTY_SI_RUN_COMMAND_AT_STARTUP"
+     printf '\e]2;%s\a' (string replace -ra '[\x00-\x1F\x7F]' '' -- "$KITTY_SI_RUN_COMMAND_AT_STARTUP")
+     set --local _krcs "$KITTY_SI_RUN_COMMAND_AT_STARTUP"
+     set --erase KITTY_SI_RUN_COMMAND_AT_STARTUP
++    # eval does not fire fish_preexec and fish_postexec so mark the command explicitly, as for a
++    # typed one, if prompts are marked at all: by fish itself in 4.0+ or by __ksi_schedule before that
++    set --local _ksi_mark
++    status test-feature mark-prompt 2> /dev/null
++    switch $status
++        case 0
++            set _ksi_mark y
++        case 2
++            test -n "$KITTY_SHELL_INTEGRATION"
++            and not contains "no-prompt-mark" (string split " " -- "$KITTY_SHELL_INTEGRATION")
++            and set _ksi_mark y
++    end
++    test -n "$_ksi_mark" && printf '\e]133;C;cmdline_url=%s\a' (string escape --style=url -- "$_krcs")
+     eval "$_krcs"
++    set --local _krcs_status $status
++    test -n "$_ksi_mark" && printf '\e]133;D;%s\a' $_krcs_status
+ end
+ 
+ function __ksi_schedule --on-event fish_prompt -d "Setup kitty integration after other scripts have run, we hope"
+diff --git a/shell-integration/zsh/kitty-integration b/shell-integration/zsh/kitty-integration
+index f4eab14cc..73a7fb8fa 100644
+--- a/shell-integration/zsh/kitty-integration
++++ b/shell-integration/zsh/kitty-integration
+@@ -353,7 +353,15 @@ _ksi_deferred_init() {
+     # run startup command
+     if [[ -n "$krcs" ]]; then
+         builtin print -nu "$_ksi_fd" -f '\e]2;%s\e\\' -- "${(V)krcs}"
++        # eval bypasses _ksi_preexec and _ksi_precmd so mark the command explicitly, as for a typed one
++        if (( ! opt[(Ie)no-prompt-mark] )); then
++            builtin print -nu "$_ksi_fd" -f '\e]133;C;cmdline=%q\a' -- "$krcs"
++        fi
+         builtin eval "$krcs"
++        builtin local -i krcs_status=$?  # declared after eval so as to not be visible to it
++        if (( ! opt[(Ie)no-prompt-mark] )); then
++            builtin print -nu "$_ksi_fd" '\e]133;D;'$krcs_status'\a'
++        fi
+     fi
+ 
+     if (( $+functions[_ksi_preexec] )); then
+-- 
+2.55.0
+

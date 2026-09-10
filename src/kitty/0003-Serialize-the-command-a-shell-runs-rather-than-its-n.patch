@@ -1,0 +1,86 @@
+From db1ce341f29582c8529619b9da892adc4ac1fcd8 Mon Sep 17 00:00:00 2001
+From: ttyS3 <41882455+ttys3@users.noreply.github.com>
+Date: Thu, 10 Sep 2026 13:35:58 +0000
+Subject: [PATCH 3/3] Serialize the command a shell runs rather than its newest
+ descendant
+
+Without command marks from the shell, save_as_session --use-foreground-process
+recorded the newest process in the foreground process group, and the working
+directory of every window running a command was taken from it as well. For a
+program that spawns helpers that is one of the helpers, a socat relay, a
+language server, an MCP server, so restoring the session ran the helper instead
+of the program, and a helper that changes directory took the working directory
+of the window along.
+
+Use the oldest process in the foreground process group other than the shell
+itself for both. The shell has to be excluded as bash and fish run the commands
+they run while starting up, such as KITTY_SI_RUN_COMMAND_AT_STARTUP, in their
+own process group. zsh runs them in a separate one, like typed commands.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01EF1vyDbXcwbtqaBJu8uar4
+---
+ kitty/child.py  | 23 +++++++++++++++++++++++
+ kitty/window.py |  5 +++--
+ 2 files changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/kitty/child.py b/kitty/child.py
+index 560a60040..064eb7a00 100644
+--- a/kitty/child.py
++++ b/kitty/child.py
+@@ -643,6 +643,29 @@ def get_pid_for_cwd(self, oldest: bool = False) -> int | None:
+     def pid_for_cwd(self) -> int | None:
+         return self.get_pid_for_cwd()
+ 
++    @property
++    def pid_of_foreground_command(self) -> int | None:
++        # The process the shell launched to run the command in the foreground,
++        # if any. This is the oldest process in the foreground process group
++        # rather than the newest, which is typically just some helper the
++        # command spawned. The shell itself is excluded, as bash and fish run
++        # the commands they run while starting up, such as
++        # KITTY_SI_RUN_COMMAND_AT_STARTUP, in the process group of the shell.
++        with suppress(Exception):
++            assert self.child_fd is not None
++            pgrp = os.tcgetpgrp(self.child_fd)
++            if pgrp >= 0:
++                return min((pid for pid in processes_in_group(pgrp) if pid != self.pid), default=None)
++        return None
++
++    @property
++    def cwd_of_foreground_command(self) -> str | None:
++        with suppress(Exception):
++            pid = self.pid_of_foreground_command
++            if pid is not None:
++                return cwd_of_process(pid) or None
++        return None
++
+     def get_foreground_cwd(self, oldest: bool = False) -> str | None:
+         with suppress(Exception):
+             pid = self.get_pid_for_cwd(oldest)
+diff --git a/kitty/window.py b/kitty/window.py
+index 64c5de405..39818ac29 100644
+--- a/kitty/window.py
++++ b/kitty/window.py
+@@ -2339,7 +2339,8 @@ def serialize_state(self) -> dict[str, Any]:
+ 
+     @property
+     def cwd_for_serialization(self) -> str:
+-        cwd = self.get_cwd_of_child(oldest=False) or self.get_cwd_of_child(oldest=True) or self.child.cwd
++        # the working directory of the command, if any, that as_launch_command() serializes
++        cwd = self.child.cwd_of_foreground_command or self.get_cwd_of_child(oldest=False) or self.get_cwd_of_child(oldest=True) or self.child.cwd
+         if self.screen.last_reported_cwd and self.at_prompt and not self.child_is_remote:
+             cwd = path_from_osc7_url(self.screen.last_reported_cwd) or cwd
+         return cwd
+@@ -2436,7 +2437,7 @@ def make_exe_absolute(cmd: list[str], pid: int) -> None:
+                         # it is the command it was asked to run at startup, keep it as it was specified
+                         # rather than as joined into a command line for this particular shell
+                         unserialize_data['cmd_at_shell_startup'] = list(scmd)
+-                elif self.child.pid != (pid := self.child.pid_for_cwd) and pid is not None:
++                elif (pid := self.child.pid_of_foreground_command) is not None:
+                     # we have a shell running some command
+                     with suppress(Exception):
+                         fcmd = self.child.cmdline_of_pid(pid)
+-- 
+2.55.0
+
