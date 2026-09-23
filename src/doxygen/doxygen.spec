@@ -18,7 +18,7 @@ Summary: A documentation system for C/C++
 Name:    doxygen
 Epoch:   2
 Version: 1.18.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 # No version is specified.
 License: GPL-2.0-or-later
 Url: https://github.com/doxygen
@@ -124,7 +124,10 @@ BuildRequires: cmake
 BuildRequires: git
 
 %if "%{?xapian_core_support}" == "ON"
-BuildRequires: xapian-core-devel
+# Link doxyindexer/doxysearch against the xapian 2.x from this repo
+# (libxapian.so.45); never fall back to Fedora's xapian 1.4 (libxapian.so.30),
+# which cannot be installed alongside it.
+BuildRequires: xapian-core-devel >= 2.0
 %endif
 
 %if "%{clang_support}" == "ON"
@@ -374,6 +377,9 @@ install -m755 -D --target-directory=%{buildroot}%{_rpmconfigdir}/redhat %{SOURCE
 %endif
 
 %changelog
+* Wed Sep 23 2026 ttyS3 <41882455+ttys3@users.noreply.github.com> - 2:1.18.0-2
+- Build doxyindexer/doxysearch against xapian 2.x (libxapian.so.45)
+
 * Tue Sep 22 2026 Than Ngo <than@redhat.com> - 2:1.18.0-1
 - Fix rhbz#2515301, Update to 1.18.0
 

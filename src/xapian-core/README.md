@@ -72,7 +72,8 @@ khelpcenter and libzim:
 dnf repoquery --whatrequires 'libxapian.so.30()(64bit)'
 ```
 
-doxygen links libxapian for its external search tools (`doxyindexer` / `doxysearch.cgi`):
+doxygen links libxapian for its external search tools (`doxyindexer` / `doxysearch.cgi`);
+`../doxygen` in this repo is Fedora's doxygen rebuilt against xapian 2.x:
 
 https://src.fedoraproject.org/rpms/doxygen/blob/rawhide/f/doxygen.spec
 
