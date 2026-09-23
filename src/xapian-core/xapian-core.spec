@@ -6,20 +6,27 @@
 %endif
 
 Name:          xapian-core
-Version:       1.5.0
-Release:       4%{?dist}
+Version:       2.1.0
+Release:       1%{?dist}
 Summary:       The Xapian Probabilistic Information Retrieval Library
 License:       GPL-2.0-or-later
 URL:           https://www.xapian.org/
-# https://oligarchy.co.uk/xapian/master/xapian-core-1.5.0_git3540.tar.xz
-# https://github.com/ttys3/xapian/releases/download/v1.5.0_git_27b092e/xapian-core-1.5.0.tar.xz
-Source0:       https://github.com/ttys3/xapian/releases/download/v1.5.0_git_27b092e/%{name}-%{version}.tar.xz
+Source0:       https://oligarchy.co.uk/xapian/%{version}/%{name}-%{version}.tar.xz
+Source1:       https://oligarchy.co.uk/xapian/%{version}/%{name}-%{version}.tar.xz.asc
+# Olly Betts' release signing key, cross-checked against Debian's
+# debian/upstream/signing-key.asc and keys.openpgp.org
+Source2:       gpgkey-08E2400FF7FE8FEDE3ACB52818147B073BAD2B07.gpg
 
 
 BuildRequires: gcc
 BuildRequires: gcc-c++
+BuildRequires: gnupg2
 BuildRequires: libuuid-devel
 BuildRequires: make
+# ICU enables FLAG_WORD_BREAKS (UAX#29 word segmentation for CJK text).
+# configure detects ICU purely via pkg-config - there is no --enable-icu
+# flag - so without this BuildRequires the feature is silently compiled out.
+BuildRequires: pkgconfig(icu-uc) >= 54.1
 BuildRequires: zlib-devel
 %if 0%{?with_tests}
 BuildRequires: valgrind-devel
@@ -54,10 +61,15 @@ indexing and search facilities to applications. This package provides the
 files needed for building packages which use Xapian
 
 %prep
+%{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
 %autosetup -p1
 
 %build
 %configure
+# configure auto-detects ICU with no flag to force it on; hard-fail here so a
+# missing/broken icu-uc .pc can never silently ship a build without
+# FLAG_WORD_BREAKS.
+grep -q '#define USE_ICU 1' config.h
 
 %{make_build}
 
@@ -80,31 +92,41 @@ make check %{?_smp_mflags}
 %files
 %doc AUTHORS NEWS README
 %{_bindir}/xapian*
-%{_bindir}/quest-1.5
-%{_bindir}/copydatabase-1.5
-%{_bindir}/simpleindex-1.5
-%{_bindir}/simplesearch-1.5
-%{_bindir}/simpleexpand-1.5
+%exclude %{_bindir}/xapian-config
+%{_bindir}/copydatabase
+%{_bindir}/simpleindex
+%{_bindir}/simplesearch
+%{_bindir}/simpleexpand
 %{_datadir}/xapian-core/
 %{_mandir}/man1/xapian*
-%{_mandir}/man1/quest-1.5.1*
-%{_mandir}/man1/copydatabase-1.5.1*
+%exclude %{_mandir}/man1/xapian-config.1*
+%{_mandir}/man1/copydatabase.1*
 
 %files libs
 %license COPYING
-%{_libdir}/libxapian-1.5.so.*
+%{_libdir}/libxapian.so.*
 
 %files devel
-%doc HACKING PLATFORMS docs/*html docs/apidoc
-%{_bindir}/xapian-config-1.5
-%{_includedir}/xapian-1.5
-%{_libdir}/libxapian-1.5.so
+%doc HACKING docs/*html docs/apidoc
+%{_bindir}/xapian-config
+%{_includedir}/xapian
+%{_includedir}/xapian.h
+%{_libdir}/libxapian.so
 %{_libdir}/cmake/xapian
-%{_libdir}/pkgconfig/xapian-core-1.5.pc
-%{_datadir}/aclocal/xapian-1.5.m4
-%{_mandir}/man1/xapian-config-1.5.1*
+%{_libdir}/pkgconfig/xapian-core.pc
+%{_datadir}/aclocal/xapian.m4
+%{_mandir}/man1/xapian-config.1*
 
 %changelog
+* Wed Sep 23 2026 ttyS3 <41882455+ttys3@users.noreply.github.com> - 2.1.0-1
+- Update to 2.1.0, the current upstream stable release; ABI-compatible with
+  2.0.x (soname stays libxapian.so.45)
+- Build from the official upstream tarball and verify its GPG signature
+- Enable ICU word segmentation (FLAG_WORD_BREAKS, needed for CJK search) and
+  assert USE_ICU after %%configure, since configure only auto-detects ICU
+- Drop PLATFORMS from %%doc (removed upstream)
+- Ship xapian-config and its man page only in -devel
+
 * Thu May 18 2023 Peter Robinson <pbrobinson@fedoraproject.org> - 1.4.22-1
 - Update to 1.4.22
 
