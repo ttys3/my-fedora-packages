@@ -1,5 +1,9 @@
 %global gomodulesmode GO111MODULE=on
 %global goipath kitty
+# kitty >= 0.49 compiles its shaders with slangc at build time, Fedora does not
+# package shader-slang, so use the upstream prebuilt compiler, at the version
+# pinned by kitty in bypy/sources.json. Only used during the build.
+%global slang_version 2026.14.1
 
 %ifarch %{x86_64} %{arm64}
 %bcond test 1
@@ -8,7 +12,7 @@
 %endif
 
 Name:           kitty
-Version:        0.48.2
+Version:        0.49.2
 Release:        %autorelease
 Summary:        Cross-platform, fast, feature full, GPU based terminal emulator
 
@@ -34,6 +38,8 @@ Source4:        go-vendor-tools.toml
 # * https://github.com/kovidgoyal/kitty/pull/2088
 Source5:        https://raw.githubusercontent.com/kovidgoyal/kitty/46c0951751444e4f4994008f0d2dcb41e49389f4/kitty/data/%{name}.appdata.xml
 Source6:        https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/NerdFontsSymbolsOnly.tar.xz
+Source7:        https://github.com/shader-slang/slang/releases/download/v%{slang_version}/slang-%{slang_version}-linux-x86_64-glibc-2.28.tar.gz
+Source8:        https://github.com/shader-slang/slang/releases/download/v%{slang_version}/slang-%{slang_version}-linux-aarch64-glibc-2.28.tar.gz
 
 # Keep the command of windows restored from a session when saving it again with
 # save_as_session --use-foreground-process, instead of degrading it into a helper
@@ -45,6 +51,8 @@ Patch2:         0003-Serialize-the-command-a-shell-runs-rather-than-its-n.patch
 
 # https://fedoraproject.org/wiki/Changes/EncourageI686LeafRemoval
 ExcludeArch:    %{ix86}
+# The prebuilt slangc used to compile the shaders exists only for these
+ExclusiveArch:  x86_64 aarch64
 
 BuildRequires:  golang >= 1.23.0
 BuildRequires:  go-rpm-macros
@@ -218,6 +226,14 @@ sed -i 's|if exit_err, ok := errors.AsType\[\*exec.ExitError\](err); ok {|var ex
 mkdir fonts
 tar -xf %{SOURCE6} -C fonts
 
+# Outside the source tree, so that %%go_vendor_license_check does not see its license
+mkdir ../slang
+%ifarch aarch64
+tar -xf %{SOURCE8} -C ../slang
+%else
+tar -xf %{SOURCE7} -C ../slang
+%endif
+
 # Changing sphinx theme to classic
 sed "s/html_theme = 'furo'/html_theme = 'classic'/" -i docs/conf.py
 
@@ -236,6 +252,7 @@ find -type f ! -executable -name "*.py" -exec sed -i '1{\@^#!%{python3}@d}' "{}"
 
 %build
 %set_build_flags
+export SLANGC=$(realpath ../slang/bin/slangc)
 %{python3} setup.py linux-package   \
     --libdir-name=%{_lib}           \
     --update-check-interval=0       \
@@ -276,6 +293,7 @@ mkdir -p kitty/launcher
 ln -s %{buildroot}%{_bindir}/%{name} kitty/launcher/
 export PATH=%{buildroot}%{_bindir}:$PATH
 export PYTHONPATH=$(pwd)
+export SLANGC=$(realpath ../slang/bin/slangc)
 %{python3} setup.py test          \
     --prefix=%{buildroot}%{_prefix}
 %endif
