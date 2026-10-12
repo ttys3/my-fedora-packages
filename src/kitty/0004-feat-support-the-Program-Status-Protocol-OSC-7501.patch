@@ -1,0 +1,762 @@
+From 9935660117f63aa2c0bad89430e3e6b16cd191d0 Mon Sep 17 00:00:00 2001
+From: ttyS3 <41882455+ttys3@users.noreply.github.com>
+Date: Mon, 12 Oct 2026 08:53:50 +0000
+Subject: [PATCH 4/5] feat: support the Program Status Protocol (OSC 7501)
+
+Implement revision 0.4 of the Program Status Protocol, which lets a
+program report whether it is idle, working, done, blocked on the user
+or failed, and why.
+
+- Parse and validate reports per the spec: limits, base64 text without
+  control characters, malformed ids discard the report instead of
+  falling back to the root record, unknown states are ignored
+- Keep up to 256 records per window (LRU eviction), with clear removing
+  a record and its descendants and app inherited from ancestors
+- Reply to the feature detection query with supported states and kinds
+- Lifetime: working/blocked/idle records are dropped at a new shell
+  prompt (OSC 133;A), done/error are dropped when the window gets focus,
+  a full reset (RIS) removes every record
+- Expose records via tab.program_status in tab_title_template, the
+  output of kitten @ ls and a new on_program_status_change watcher
+
+Spec: https://www.superlogical.com/rex/docs/build/program-status
+Ref: ghostty-org/ghostty#14560, ghostty-org/ghostty#14630
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ docs/launch.rst               |   7 +
+ docs/misc-protocol.rst        |  23 ++++
+ kitty/launch.py               |   3 +
+ kitty/options/definition.py   |   5 +
+ kitty/program_status.py       | 251 ++++++++++++++++++++++++++++++++++
+ kitty/screen.c                |   5 +
+ kitty/screen.h                |   1 +
+ kitty/tab_bar.py              |   9 ++
+ kitty/vt-parser.c             |   4 +
+ kitty/window.py               |  37 +++++
+ kitty_tests/base.py           |   4 +
+ kitty_tests/parser.py         |   4 +
+ kitty_tests/program_status.py | 132 ++++++++++++++++++
+ 13 files changed, 485 insertions(+)
+ create mode 100644 kitty/program_status.py
+ create mode 100644 kitty_tests/program_status.py
+
+diff --git a/docs/launch.rst b/docs/launch.rst
+index 6a984f118..b47292093 100644
+--- a/docs/launch.rst
++++ b/docs/launch.rst
+@@ -168,6 +168,13 @@ create :file:`~/.config/kitty/mywatcher.py` and use :option:`launch --watcher` =
+         # data will contain is_start, cmdline and time.
+         ...
+ 
++    def on_program_status_change(boss: Boss, window: Window, data: dict[str, Any]) -> None:
++        # called when the program status (OSC 7501) records of the window
++        # change. Here data will contain program_status, the list of current
++        # records, each a dict with keys: id, state, kind, progress, app,
++        # title and msg.
++        ...
++
+     def on_color_scheme_preference_change(boss: Boss, window: Window, data: dict[str, Any]) -> None:
+         # called when the color scheme preference of this window changes from
+         # light to dark or vice versa. data contains is_dark and via_escape_code
+diff --git a/docs/misc-protocol.rst b/docs/misc-protocol.rst
+index 9e72b217e..9f1573d1c 100644
+--- a/docs/misc-protocol.rst
++++ b/docs/misc-protocol.rst
+@@ -52,6 +52,29 @@ screen in the same state as it would be if the standard screen clear escape
+ code had been used ``\x1b [ 2 J``.
+ 
+ 
++.. _program_status:
++
++Reporting the status of a program
++-------------------------------------
++
++kitty supports the `Program Status Protocol (OSC 7501)
++<https://www.superlogical.com/rex/docs/build/program-status>`__, revision 0.4,
++which lets a program tell the terminal what it is doing: idle, working,
++finished, blocked waiting on the user or failed, and why. For example::
++
++    printf '\e]7501;state=working:app=rsync:progress=40\e\\'
++
++kitty keeps the records reported by programs per window and applies the
++lifetime rules of the specification: :code:`working`, :code:`blocked` and
++:code:`idle` records are dropped when a new shell prompt starts (needs
++:ref:`shell_integration`), :code:`done` and :code:`error` records are kept until
++the window is focused, and a full reset removes every record. The status is
++shown in the tab bar via the :code:`tab.program_status` field of
++:opt:`tab_title_template`, is reported in the output of ``kitten @ ls``, and
++:ref:`watchers <watchers>` can react to it via
++:code:`on_program_status_change`.
++
++
+ kitty specific private escape codes
+ ---------------------------------------
+ 
+diff --git a/kitty/launch.py b/kitty/launch.py
+index 5a8957362..443e421de 100644
+--- a/kitty/launch.py
++++ b/kitty/launch.py
+@@ -569,6 +569,9 @@ def load_watch_modules(watchers: Iterable[str]) -> Watchers | None:
+         w = m.get('on_cmd_startstop')
+         if callable(w):
+             ans.on_cmd_startstop.append(w)
++        w = m.get('on_program_status_change')
++        if callable(w):
++            ans.on_program_status_change.append(w)
+         w = m.get('on_color_scheme_preference_change')
+         if callable(w):
+             ans.on_color_scheme_preference_change.append(w)
+diff --git a/kitty/options/definition.py b/kitty/options/definition.py
+index 5f3e6c5a0..45a50107a 100644
+--- a/kitty/options/definition.py
++++ b/kitty/options/definition.py
+@@ -2407,6 +2407,11 @@
+ :code:`tab.progress_percent`
+     If a command running in a window reports the progress for a task, show this progress as a percentage
+     from all windows in the tab, averaged. Empty string is no progress is reported.
++:code:`tab.program_status`
++    If a program running in a window reports its status using the
++    :ref:`program status protocol <program_status>`, a short symbol for the most urgent
++    status of all windows in the tab: blocked on the user, failed, finished or working
++    (with percentage, if reported). Empty string if no program reports a status.
+ :code:`tab.children_mem_usage`
+     The current memory usage of all child process of the tab and their descendants
+ :code:`custom`
+diff --git a/kitty/program_status.py b/kitty/program_status.py
+new file mode 100644
+index 000000000..5ae863c04
+--- /dev/null
++++ b/kitty/program_status.py
+@@ -0,0 +1,251 @@
++#!/usr/bin/env python
++# License: GPLv3 Copyright: 2026, Kovid Goyal <kovid at kovidgoyal.net>
++
++# Program Status Protocol (OSC 7501), revision 0.4
++# https://www.superlogical.com/rex/docs/build/program-status
++
++import binascii
++import re
++from collections import OrderedDict
++from collections.abc import Iterable, Iterator
++from enum import Enum
++from typing import Any, NamedTuple
++
++OSC_CODE = 7501
++# The whole sequence, ESC ] through ST, assuming the longer ST of ESC \
++MAX_SEQUENCE_BYTES = 4096
++MAX_BODY_BYTES = MAX_SEQUENCE_BYTES - len(f'\x1b]{OSC_CODE};') - len('\x1b\\')
++MAX_KEY_BYTES = 16
++MAX_MSG_ENCODED_BYTES, MAX_MSG_BYTES = 2732, 2048
++MAX_TITLE_ENCODED_BYTES, MAX_TITLE_BYTES = 256, 192
++MAX_APP_BYTES = 32
++MAX_ID_BYTES, MAX_ID_SEGMENT_BYTES, MAX_ID_DEPTH = 128, 32, 8
++MAX_RECORDS = 256
++
++key_pat = re.compile(r'[a-z]+')
++value_pat = re.compile(r'[A-Za-z0-9_.,+/=-]*')
++name_pat = re.compile(r'[A-Za-z0-9_.+-]+')
++progress_pat = re.compile(r'[0-9]+')
++# C0, DEL and C1 control characters
++control_chars_pat = re.compile('[\x00-\x1f\x7f-\x9f]')
++
++
++class State(Enum):
++    idle = 'idle'
++    working = 'working'
++    done = 'done'
++    blocked = 'blocked'
++    error = 'error'
++
++
++class Kind(Enum):
++    permission = 'permission'
++    question = 'question'
++    auth = 'auth'
++
++
++# Reply to the feature detection query, lists the states and kinds we accept
++QUERY_REPLY = '{};?:states={}:kinds={}'.format(OSC_CODE, ','.join(s.value for s in State), ','.join(k.value for k in Kind))
++# Records that are dropped when the process exits or a new shell prompt begins
++TRANSIENT_STATES = frozenset((State.working, State.blocked, State.idle))
++# Records that remain until the user has seen them
++UNSEEN_STATES = frozenset((State.done, State.error))
++# Higher is more urgent, used to pick the record to show for several records
++URGENCY = {State.idle: 0, State.working: 1, State.done: 2, State.error: 3, State.blocked: 4}
++
++
++class InvalidReport(ValueError):
++    pass
++
++
++class Record(NamedTuple):
++    id: str = ''  # empty for the root record
++    state: State = State.idle
++    kind: Kind | None = None
++    progress: int | None = None
++    app: str = ''
++    title: str = ''
++    msg: str = ''
++
++    def as_dict(self) -> dict[str, Any]:
++        return {
++            'id': self.id,
++            'state': self.state.value,
++            'kind': self.kind.value if self.kind else None,
++            'progress': self.progress,
++            'app': self.app,
++            'title': self.title,
++            'msg': self.msg,
++        }
++
++
++class Clear(NamedTuple):
++    id: str = ''  # empty means every record
++
++
++def is_valid_id(val: str) -> bool:
++    if len(val) > MAX_ID_BYTES:
++        return False
++    segments = val.split('/')
++    return len(segments) <= MAX_ID_DEPTH and all(len(s) <= MAX_ID_SEGMENT_BYTES and name_pat.fullmatch(s) for s in segments)
++
++
++def decode_text(encoded: str, max_encoded: int, max_decoded: int) -> str:
++    if len(encoded) > max_encoded:
++        raise InvalidReport('text value too long')
++    if len(encoded) % 4 == 1:
++        raise InvalidReport('invalid base64')
++    try:
++        raw = binascii.a2b_base64(encoded + '=' * (-len(encoded) % 4), strict_mode=True)
++        text = raw.decode('utf-8')
++    except (binascii.Error, UnicodeDecodeError) as e:
++        raise InvalidReport(f'invalid text value: {e}') from e
++    if len(raw) > max_decoded:
++        raise InvalidReport('decoded text value too long')
++    if control_chars_pat.search(text) is not None:
++        raise InvalidReport('text value contains control characters')
++    return text
++
++
++def parse_report(body: str) -> Record | Clear:
++    "Parse the body of an OSC 7501 report, everything after 7501; Raises InvalidReport if the report must be discarded."
++    if len(body.encode('utf-8')) > MAX_BODY_BYTES:
++        raise InvalidReport('report too long')
++    values: dict[str, str] = {}
++    for pair in body.split(':'):
++        key, sep, val = pair.partition('=')
++        key, val = key.strip(), val.strip()
++        if not sep or not key_pat.fullmatch(key):
++            continue
++        if len(key) > MAX_KEY_BYTES:
++            raise InvalidReport('key too long')
++        if value_pat.fullmatch(val) is None:
++            if key == 'id':  # never fall back to the root record because of a malformed id
++                raise InvalidReport('invalid id')
++            continue
++        # Every value is checked against its limit, even if a later pair with the same key replaces it
++        if key == 'id' and not is_valid_id(val):
++            raise InvalidReport('invalid id')
++        if key == 'app' and len(val) > MAX_APP_BYTES:
++            raise InvalidReport('app too long')
++        if key == 'msg' and len(val) > MAX_MSG_ENCODED_BYTES:
++            raise InvalidReport('msg too long')
++        if key == 'title' and len(val) > MAX_TITLE_ENCODED_BYTES:
++            raise InvalidReport('title too long')
++        values[key] = val
++    title = decode_text(t, MAX_TITLE_ENCODED_BYTES, MAX_TITLE_BYTES) if (t := values.get('title')) else ''
++    msg = decode_text(m, MAX_MSG_ENCODED_BYTES, MAX_MSG_BYTES) if (m := values.get('msg')) else ''
++    rid = values.get('id', '')
++    state_name = values.get('state', '')
++    if state_name == 'clear':
++        return Clear(rid)
++    try:
++        state = State(state_name)
++    except ValueError:
++        # an unknown state discards the report so that a state added later never turns into something else
++        raise InvalidReport(f'unknown state: {state_name!r}') from None
++    kind = None
++    if state is State.blocked:
++        try:
++            kind = Kind(values.get('kind', ''))
++        except ValueError:
++            pass
++    progress = None
++    if state in (State.working, State.blocked) and progress_pat.fullmatch(p := values.get('progress', '')) and int(p) <= 100:
++        progress = int(p)
++    app = values.get('app', '')
++    if not name_pat.fullmatch(app):
++        app = ''
++    return Record(id=rid, state=state, kind=kind, progress=progress, app=app, title=title, msg=msg)
++
++
++def is_descendant_or_self(rid: str, ancestor: str) -> bool:
++    return not ancestor or rid == ancestor or rid.startswith(ancestor + '/')
++
++
++class ProgramStatus:
++    "The records reported by the programs running in one window"
++
++    def __init__(self) -> None:
++        self.records: OrderedDict[str, Record] = OrderedDict()
++
++    def __bool__(self) -> bool:
++        return bool(self.records)
++
++    def __iter__(self) -> Iterator[Record]:
++        return iter(self.records.values())
++
++    def apply(self, report: Record | Clear) -> bool:
++        "Apply a report, returns True if the records changed"
++        if isinstance(report, Clear):
++            return self.remove(lambda r: is_descendant_or_self(r.id, report.id))
++        if self.records.get(report.id) == report:
++            self.records.move_to_end(report.id)
++            return False
++        self.records[report.id] = report
++        self.records.move_to_end(report.id)
++        while len(self.records) > MAX_RECORDS:  # drop the least recently updated record
++            self.records.popitem(last=False)
++        return True
++
++    def remove(self, predicate: Any) -> bool:
++        remove = tuple(rid for rid, r in self.records.items() if predicate(r))
++        for rid in remove:
++            del self.records[rid]
++        return bool(remove)
++
++    def clear(self) -> bool:
++        ans = bool(self.records)
++        self.records.clear()
++        return ans
++
++    def on_process_exit_or_prompt(self) -> bool:
++        return self.remove(lambda r: r.state in TRANSIENT_STATES)
++
++    def on_seen_by_user(self) -> bool:
++        return self.remove(lambda r: r.state in UNSEEN_STATES)
++
++    def app_for(self, record: Record) -> str:
++        "The app of a record, inherited from its nearest ancestor if absent"
++        if record.app:
++            return record.app
++        rid = record.id
++        while rid:
++            rid = rid.rpartition('/')[0]
++            if (a := self.records.get(rid)) is not None and a.app:
++                return a.app
++        return ''
++
++    def most_urgent(self) -> Record | None:
++        return most_urgent(reversed(self.records.values()))  # prefer the most recently updated
++
++    def as_list(self) -> list[dict[str, Any]]:
++        ans = []
++        for r in self.records.values():
++            d = r.as_dict()
++            d['app'] = self.app_for(r)
++            ans.append(d)
++        return ans
++
++
++def most_urgent(records: Iterable[Record]) -> Record | None:
++    ans: Record | None = None
++    for r in records:
++        if ans is None or URGENCY[r.state] > URGENCY[ans.state]:
++            ans = r
++    return ans
++
++
++def status_symbol(record: Record | None) -> str:
++    "A short indicator for use in tab and window titles"
++    if record is None or record.state is State.idle:
++        return ''
++    if record.state is State.blocked:
++        return '  '
++    if record.state is State.error:
++        return '  '
++    if record.state is State.done:
++        return '  '
++    if record.progress is not None:
++        return f'  {record.progress}% '
++    return '  '
+diff --git a/kitty/screen.c b/kitty/screen.c
+index 6010c35a1..d59fd1ec9 100644
+--- a/kitty/screen.c
++++ b/kitty/screen.c
+@@ -3524,6 +3524,11 @@ osc_context(Screen *self, PyObject *ctx) {
+     CALLBACK("osc_context", "O", ctx);
+ }
+ 
++void
++program_status_report(Screen *self, PyObject *data) {
++    CALLBACK("program_status_report", "O", data);
++}
++
+ void
+ desktop_notify(Screen *self, unsigned int osc_code, PyObject *data) {
+     CALLBACK("desktop_notify", "IO", osc_code, data);
+diff --git a/kitty/screen.h b/kitty/screen.h
+index b41b800cf..bdb4468d4 100644
+--- a/kitty/screen.h
++++ b/kitty/screen.h
+@@ -290,6 +290,7 @@ void screen_report_color_stack(Screen *);
+ void screen_handle_kitty_dcs(Screen *, const char *callback_name, PyObject *cmd);
+ void set_title(Screen *self, PyObject *);
+ void osc_context(Screen *self, PyObject *ctx);
++void program_status_report(Screen *self, PyObject *data);
+ void desktop_notify(Screen *self, unsigned int, PyObject *);
+ void set_icon(Screen *self, PyObject *);
+ void set_dynamic_color(Screen *self, unsigned int code, PyObject *);
+diff --git a/kitty/tab_bar.py b/kitty/tab_bar.py
+index 6ed914863..7547dd174 100644
+--- a/kitty/tab_bar.py
++++ b/kitty/tab_bar.py
+@@ -288,6 +288,15 @@ def progress_percent(self) -> str:
+         p = int(tab.total_progress / tab.num_of_windows_with_progress)
+         return f'{p}% '
+ 
++    @property
++    def program_status(self) -> str:
++        from .program_status import most_urgent, status_symbol
++
++        tab = get_boss().tab_for_id(self.tab_id)
++        if not tab:
++            return ''
++        return status_symbol(most_urgent(r for w in tab if (r := w.program_status.most_urgent()) is not None))
++
+     @property
+     def children_mem_usage(self) -> str:
+         from kittens.tui.utils import human_size
+diff --git a/kitty/vt-parser.c b/kitty/vt-parser.c
+index 50dc1e6d6..ec476d58a 100644
+--- a/kitty/vt-parser.c
++++ b/kitty/vt-parser.c
+@@ -659,6 +659,10 @@ dispatch_osc(PS *self, uint8_t *buf, size_t limit, bool is_extended_osc) {
+             START_DISPATCH
+             DISPATCH_OSC(osc_context);
+             END_DISPATCH
++        case 7501:
++            START_DISPATCH
++            DISPATCH_OSC(program_status_report);
++            END_DISPATCH
+         case 7704: REPORT_ERROR("Ignoring OSC 7704, used by mintty for ANSI colors"); break;
+         case 7750: REPORT_ERROR("Ignoring OSC 7750, used by mintty for Emoji style"); break;
+         case 7770: REPORT_ERROR("Ignoring OSC 7770, used by mintty for font size"); break;
+diff --git a/kitty/window.py b/kitty/window.py
+index 146cea66a..541911a1a 100644
+--- a/kitty/window.py
++++ b/kitty/window.py
+@@ -101,6 +101,7 @@
+ from .keys import keyboard_mode_name, mod_mask
+ from .notifications import NotificationManager
+ from .options.types import Options
++from .program_status import ProgramStatus
+ from .progress import Progress
+ from .rgb import to_color
+ from .terminfo import get_capabilities
+@@ -292,6 +293,7 @@ class WindowDict(TypedDict):
+     session_name: str
+     needs_attention: bool
+     has_activity_since_last_focus: bool
++    program_status: list[dict[str, Any]]
+ 
+ 
+ class PipeData(TypedDict):
+@@ -342,6 +344,7 @@ class Watchers:
+     on_set_user_var: list[Watcher]
+     on_title_change: list[Watcher]
+     on_cmd_startstop: list[Watcher]
++    on_program_status_change: list[Watcher]
+     on_color_scheme_preference_change: list[Watcher]
+     on_tab_bar_dirty: list[Watcher]
+     on_quit: list[Watcher]
+@@ -353,6 +356,7 @@ def __init__(self) -> None:
+         self.on_set_user_var = []
+         self.on_title_change = []
+         self.on_cmd_startstop = []
++        self.on_program_status_change = []
+         self.on_color_scheme_preference_change = []
+         self.on_tab_bar_dirty = []
+         self.on_quit = []
+@@ -369,6 +373,7 @@ def merge(base: list[Watcher], other: list[Watcher]) -> None:
+         merge(self.on_set_user_var, others.on_set_user_var)
+         merge(self.on_title_change, others.on_title_change)
+         merge(self.on_cmd_startstop, others.on_cmd_startstop)
++        merge(self.on_program_status_change, others.on_program_status_change)
+         merge(self.on_color_scheme_preference_change, others.on_color_scheme_preference_change)
+         merge(self.on_tab_bar_dirty, others.on_tab_bar_dirty)
+         merge(self.on_quit, others.on_quit)
+@@ -376,6 +381,7 @@ def merge(base: list[Watcher], other: list[Watcher]) -> None:
+     def clear(self) -> None:
+         del self.on_close[:], self.on_resize[:], self.on_focus_change[:]
+         del self.on_set_user_var[:], self.on_title_change[:], self.on_cmd_startstop[:]
++        del self.on_program_status_change[:]
+         del self.on_color_scheme_preference_change[:]
+         del self.on_tab_bar_dirty[:]
+         del self.on_quit[:]
+@@ -388,6 +394,7 @@ def copy(self) -> 'Watchers':
+         ans.on_set_user_var = self.on_set_user_var[:]
+         ans.on_title_change = self.on_title_change[:]
+         ans.on_cmd_startstop = self.on_cmd_startstop[:]
++        ans.on_program_status_change = self.on_program_status_change[:]
+         ans.on_color_scheme_preference_change = self.on_color_scheme_preference_change[:]
+         ans.on_tab_bar_dirty = self.on_tab_bar_dirty[:]
+         ans.on_quit = self.on_quit[:]
+@@ -403,6 +410,7 @@ def has_watchers(self) -> bool:
+             or self.on_set_user_var
+             or self.on_title_change
+             or self.on_cmd_startstop
++            or self.on_program_status_change
+             or self.on_tab_bar_dirty
+             or self.on_quit
+         )
+@@ -766,6 +774,7 @@ def __init__(
+         self.last_focused_at = 0.0
+         self.is_focused: bool = False
+         self.progress = Progress()
++        self.program_status = ProgramStatus()
+         self.clear_progress_timer: int = 0
+         self.last_resized_at = 0.0
+         self.started_at = monotonic()
+@@ -1556,6 +1565,8 @@ def focus_changed(self, focused: bool) -> None:
+         if focused:
+             self.last_focused_at = monotonic()
+             update_ime_position_for_window(self.id, False, 1)
++            if self.program_status.on_seen_by_user():
++                self.program_status_changed()
+             changed = self.needs_attention
+             self.needs_attention = False
+             if changed:
+@@ -1582,6 +1593,27 @@ def title_changed(self, new_title: memoryview | None, is_base64: bool = False) -
+     def osc_context(self, ctx_data: memoryview) -> None:
+         pass  # this is systemd's useless OSC 3008 context protocol https://systemd.io/OSC_CONTEXT/
+ 
++    def program_status_report(self, raw_data: memoryview) -> None:
++        # OSC 7501 https://www.superlogical.com/rex/docs/build/program-status
++        from .program_status import QUERY_REPLY, InvalidReport, parse_report
++
++        body = str(raw_data, 'utf-8', 'replace')
++        if body == '?':
++            self.screen.send_escape_code_to_child(ESC_OSC, QUERY_REPLY)
++            return
++        try:
++            report = parse_report(body)
++        except InvalidReport as e:
++            log_error(f'Ignoring invalid OSC 7501 program status report: {e}')
++            return
++        if self.program_status.apply(report):
++            self.program_status_changed()
++
++    def program_status_changed(self) -> None:
++        self.call_watchers(self.watchers.on_program_status_change, {'program_status': self.program_status.as_list()})
++        if (tab := self.tabref()) is not None:
++            tab.mark_tab_bar_dirty()
++
+     def icon_changed(self, new_icon: memoryview) -> None:
+         pass  # TODO: Implement this
+ 
+@@ -1635,6 +1667,8 @@ def report_color(self, code: str, col: Color) -> None:
+     def on_reset(self, is_hard_reset: bool = True) -> None:
+         from .progress import ProgressState
+ 
++        if is_hard_reset and self.program_status.clear():
++            self.program_status_changed()
+         if self.progress.state is not ProgressState.unset:
+             self.progress.update(0)  # unset
+             if (tab := self.tabref()) is not None:
+@@ -1996,6 +2030,8 @@ def cmd_output_marking(self, is_start: bool | None, cmdline: str = '') -> None:
+             self.last_cmd_cmdline = cmdline
+             self.call_watchers(self.watchers.on_cmd_startstop, {'is_start': True, 'time': start_time, 'cmdline': cmdline, 'exit_status': 0})
+         else:
++            if is_start is False and self.program_status.on_process_exit_or_prompt():  # a new shell prompt
++                self.program_status_changed()
+             self.handle_cmd_end(cmdline)
+ 
+     # }}}
+@@ -2363,6 +2399,7 @@ def as_dict(
+             'session_name': self.created_in_session_name,
+             'needs_attention': self.needs_attention,
+             'has_activity_since_last_focus': self.has_activity_since_last_focus,
++            'program_status': self.program_status.as_list(),
+         }
+ 
+     def serialize_state(self) -> dict[str, Any]:
+diff --git a/kitty_tests/base.py b/kitty_tests/base.py
+index f95f6a0c5..f06b05759 100644
+--- a/kitty_tests/base.py
++++ b/kitty_tests/base.py
+@@ -96,6 +96,9 @@ def title_changed(self, data, is_base64=False) -> None:
+     def osc_context(self, data):
+         pass
+ 
++    def program_status_report(self, data):
++        self.program_status_reports.append(str(data, 'utf-8'))
++
+     def icon_changed(self, data) -> None:
+         self.iconbuf += str(data, 'utf-8')
+ 
+@@ -143,6 +146,7 @@ def clear(self) -> None:
+         self.printbuf = []
+         self.color_control_responses = []
+         self.notifications = []
++        self.program_status_reports = []
+         self.open_urls = []
+         self.cc_buf = []
+         self.bell_count = 0
+diff --git a/kitty_tests/parser.py b/kitty_tests/parser.py
+index 493a6afa1..7b295eee8 100644
+--- a/kitty_tests/parser.py
++++ b/kitty_tests/parser.py
+@@ -1078,6 +1078,10 @@ def test_osc_codes(self):
+         pb('\033]52;p;xyz\x07', ('clipboard_control', 52, 'p;xyz'))
+         c.clear()
+         pb('\033]22;?__current__\x07', ('set_dynamic_color', 22, '?__current__'))
++        c.clear()
++        pb('\033]7501;?\033\\', ('program_status_report', '?'))
++        pb('\033]7501;state=working:progress=40\x07', ('program_status_report', 'state=working:progress=40'))
++        self.ae(c.program_status_reports, ['?', 'state=working:progress=40'])
+ 
+     def test_dcs_codes(self):
+         s = self.create_screen()
+diff --git a/kitty_tests/program_status.py b/kitty_tests/program_status.py
+new file mode 100644
+index 000000000..16d42b752
+--- /dev/null
++++ b/kitty_tests/program_status.py
+@@ -0,0 +1,132 @@
++#!/usr/bin/env python
++# License: GPLv3 Copyright: 2026, Kovid Goyal <kovid at kovidgoyal.net>
++
++from base64 import standard_b64encode
++
++from kitty.program_status import (
++    MAX_RECORDS,
++    QUERY_REPLY,
++    Clear,
++    InvalidReport,
++    Kind,
++    ProgramStatus,
++    Record,
++    State,
++    parse_report,
++    status_symbol,
++)
++
++from .base import BaseTest
++
++
++def b64(text: str, pad: bool = True) -> str:
++    ans = standard_b64encode(text.encode()).decode()
++    return ans if pad else ans.rstrip('=')
++
++
++class TestProgramStatus(BaseTest):
++    def test_program_status_parsing(self):
++        def p(body: str) -> Record | Clear:
++            return parse_report(body)
++
++        def bad(body: str) -> None:
++            with self.assertRaises(InvalidReport, msg=body):
++                parse_report(body)
++
++        self.ae(QUERY_REPLY, '7501;?:states=idle,working,done,blocked,error:kinds=permission,question,auth')
++        msg = 'Apply 3 to add, 1 to change, 0 to destroy?'
++        self.ae(p(f'state=blocked:kind=permission:app=terraform:msg={b64(msg)}'), Record(state=State.blocked, kind=Kind.permission, app='terraform', msg=msg))
++        # padding is optional
++        self.ae(p(f'state=done:msg={b64("ab", pad=False)}:title={b64("x", pad=False)}'), Record(state=State.done, msg='ab', title='x'))
++        # whitespace, malformed pairs, unknown keys and repeated keys
++        self.ae(p(' state = idle :oops:=x:future=yes:Bad=1:app=a*b:state=working'), Record(state=State.working))
++        # kind and progress only apply to some states, invalid values are absent
++        self.ae(p('state=done:kind=auth:progress=10'), Record(state=State.done))
++        self.ae(p('state=blocked:kind=other:progress=101'), Record(state=State.blocked))
++        self.ae(p('state=working:progress=100'), Record(state=State.working, progress=100))
++        self.ae(p('state=working:progress=-1'), Record(state=State.working))
++        self.ae(p('state=working:app=a/b'), Record(state=State.working))
++        self.ae(p('state=working:id=a/b-c.d_e+f'), Record(id='a/b-c.d_e+f', state=State.working))
++        self.ae(p('state=clear'), Clear())
++        self.ae(p('state=clear:id=x/y'), Clear('x/y'))
++        # an unknown or missing state discards the report
++        bad('state=paused')
++        bad('app=x')
++        bad('')
++        # invalid ids discard the report rather than fall back to the root record
++        for rid in ('a//b', '/a', 'a/', 'a b', 'a*b', 'a,b', 'x' * 33, '/'.join('a' * 9), '/'.join(['x' * 32] * 4) + '/x'):
++            bad(f'state=clear:id={rid}')
++        bad('state=idle:id=a:id=a*b')
++        # limits, checked even for values that are later replaced
++        bad(f'state=idle:{"k" * 17}=1')
++        bad(f'state=idle:app={"a" * 33}:app=b')
++        bad(f'state=idle:title={b64("x" * 193)}')
++        bad(f'state=idle:msg={b64("x" * 2049)}')
++        bad(f'state=idle:msg={"QUFB" * 684}:msg=QQ')
++        bad('state=idle:' + 'x=y:' * 1100)
++        p(f'state=idle:title={b64("x" * 192)}:msg={b64("y" * 2048)}')
++        # invalid base64, utf-8 or control characters
++        bad('state=idle:msg=Q')
++        bad('state=idle:msg=QQ=Q')
++        bad(f'state=idle:msg={standard_b64encode(b"\xff").decode()}')
++        for cc in '\x00\t\n\x1b\x7f\x85\x9b':
++            bad(f'state=idle:msg={b64("a" + cc)}')
++        bad(f'state=idle:title={b64("a\nb")}')
++
++    def test_program_status_records(self):
++        ps = ProgramStatus()
++
++        def apply(body: str) -> bool:
++            return ps.apply(parse_report(body))
++
++        def ids() -> list[str]:
++            return [r.id for r in ps]
++
++        self.assertTrue(apply('state=working:app=deploy'))
++        self.assertFalse(apply('state=working:app=deploy'))
++        self.assertTrue(apply('state=working:id=us-east:progress=40'))
++        self.assertTrue(apply('state=blocked:kind=permission:id=eu-west'))
++        self.assertTrue(apply('state=working:id=eu-west/db:app=psql'))
++        self.ae(ids(), ['', 'us-east', 'eu-west', 'eu-west/db'])
++        # app is inherited from the nearest ancestor
++        self.ae({d['id']: d['app'] for d in ps.as_list()}, {'': 'deploy', 'us-east': 'deploy', 'eu-west': 'deploy', 'eu-west/db': 'psql'})
++        self.ae(ps.most_urgent(), ps.records['eu-west'])
++        # a report replaces its record completely
++        apply('state=working')
++        self.ae(ps.records[''], Record(state=State.working))
++        self.ae(ps.as_list()[0]['app'], '')
++        # clear removes the record and every record beneath it
++        apply('state=clear:id=eu')
++        self.ae(len(ps.records), 4)
++        apply('state=clear:id=eu-west')
++        self.ae(ids(), ['us-east', ''])
++        apply('state=clear')
++        self.assertFalse(ps)
++        # lifetime
++        apply('state=working')
++        apply('state=blocked:id=a')
++        apply('state=idle:id=b')
++        apply('state=done:id=c')
++        apply('state=error:id=d')
++        self.ae(ps.most_urgent(), ps.records['a'])
++        self.assertTrue(ps.on_process_exit_or_prompt())
++        self.ae(ids(), ['c', 'd'])
++        self.ae(ps.most_urgent(), ps.records['d'])
++        self.assertFalse(ps.on_process_exit_or_prompt())
++        self.assertTrue(ps.on_seen_by_user())
++        self.assertFalse(ps)
++        # the least recently updated record is removed past the cap
++        for i in range(MAX_RECORDS):
++            apply(f'state=idle:id=r{i}')
++        apply('state=working:id=r0')
++        apply('state=idle:id=new')
++        self.ae(len(ps.records), MAX_RECORDS)
++        self.assertNotIn('r1', ps.records)
++        self.assertIn('r0', ps.records)
++
++    def test_program_status_symbol(self):
++        self.ae(status_symbol(None), '')
++        self.ae(status_symbol(Record(state=State.idle)), '')
++        self.assertIn('40%', status_symbol(Record(state=State.working, progress=40)))
++        syms = {status_symbol(Record(state=s)) for s in State if s is not State.idle}
++        self.ae(len(syms), 4)
+-- 
+2.56.0
+
