@@ -1,4 +1,4 @@
-From 9cfe10b4c22e644e3b503db40f424c8ab2617c70 Mon Sep 17 00:00:00 2001
+From 11f321d50ab57af3a99aa3b50123b47761ce792f Mon Sep 17 00:00:00 2001
 From: ttyS3 <41882455+ttys3@users.noreply.github.com>
 Date: Thu, 10 Sep 2026 13:35:48 +0000
 Subject: [PATCH 2/3] Serialize the reported command only while it is running
@@ -22,10 +22,10 @@ Claude-Session: https://claude.ai/code/session_01EF1vyDbXcwbtqaBJu8uar4
  1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/kitty/window.py b/kitty/window.py
-index 3361a22c2..64c5de405 100644
+index bf0c7a3..d285b63 100644
 --- a/kitty/window.py
 +++ b/kitty/window.py
-@@ -2424,12 +2424,18 @@ def make_exe_absolute(cmd: list[str], pid: int) -> None:
+@@ -2602,12 +2602,18 @@ def make_exe_absolute(cmd: list[str], pid: int) -> None:
                      if self.screen.last_reported_cwd:
                          set_cwd_in_cmdline(path_from_osc7_url(self.screen.last_reported_cwd), kssh_cmdline)
                  else:
@@ -43,9 +43,9 @@ index 3361a22c2..64c5de405 100644
 +                        # it is the command it was asked to run at startup, keep it as it was specified
 +                        # rather than as joined into a command line for this particular shell
 +                        unserialize_data['cmd_at_shell_startup'] = list(scmd)
-                 elif self.child.pid != (pid := self.child.pid_for_cwd) and pid is not None:
+                 elif self.child.root_pid != (pid := self.child.pid_for_cwd) and pid is not None:
                      # we have a shell running some command
                      with suppress(Exception):
 -- 
-2.55.0
+2.56.0
 

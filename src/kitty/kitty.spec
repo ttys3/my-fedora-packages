@@ -12,7 +12,7 @@
 %endif
 
 Name:           kitty
-Version:        0.49.2
+Version:        0.50.0
 Release:        %autorelease
 Summary:        Cross-platform, fast, feature full, GPU based terminal emulator
 
@@ -48,12 +48,6 @@ Source8:        https://github.com/shader-slang/slang/releases/download/v%{slang
 Patch0:         0001-Mark-the-command-run-at-shell-startup-with-OSC-133-c.patch
 Patch1:         0002-Serialize-the-reported-command-only-while-it-is-runn.patch
 Patch2:         0003-Serialize-the-command-a-shell-runs-rather-than-its-n.patch
-
-# Support the Program Status Protocol (OSC 7501)
-# https://www.superlogical.com/rex/docs/build/program-status
-# Not yet submitted upstream
-Patch3:         0004-feat-support-the-Program-Status-Protocol-OSC-7501.patch
-Patch4:         0005-feat-show-the-number-of-windows-in-the-most-urgent-p.patch
 
 # https://fedoraproject.org/wiki/Changes/EncourageI686LeafRemoval
 ExcludeArch:    %{ix86}

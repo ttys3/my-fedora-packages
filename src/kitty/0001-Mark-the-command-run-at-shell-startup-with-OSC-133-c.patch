@@ -1,4 +1,4 @@
-From 7e0e59c4b36548dea14335076da388408268ea60 Mon Sep 17 00:00:00 2001
+From e596449624bc410b9d1e8e8e4fcc299486ad8536 Mon Sep 17 00:00:00 2001
 From: ttyS3 <41882455+ttys3@users.noreply.github.com>
 Date: Thu, 10 Sep 2026 13:35:01 +0000
 Subject: [PATCH 1/3] Mark the command run at shell startup with OSC 133
@@ -17,26 +17,42 @@ Emit the marks around the eval with the same encoding as for typed commands
 and, like for those, only when prompts are being marked. fish >= 4 marks
 prompts itself regardless of the shell_integration option, so for it check its
 mark-prompt feature instead. The exit status is captured right after the eval,
-before the conditionals can clobber it.
+before the conditionals can clobber it. In zsh it is captured in the always block
+that clears an interrupt, so that a startup command interrupted with Ctrl-C
+is reported as finished as well.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01EF1vyDbXcwbtqaBJu8uar4
 ---
- kitty_tests/shell_integration.py              | 27 +++++++++++++++++++
- shell-integration/bash/kitty.bash             |  8 ++++++
- .../kitty-shell-integration.fish              | 15 +++++++++++
- shell-integration/zsh/kitty-integration       |  8 ++++++
- 4 files changed, 58 insertions(+)
+ kitty_tests/shell_integration.py              | 29 +++++++++++++++++++
+ shell-integration/bash/kitty.bash             |  8 +++++
+ .../kitty-shell-integration.fish              | 15 ++++++++++
+ shell-integration/zsh/kitty-integration       |  8 +++++
+ 4 files changed, 60 insertions(+)
 
 diff --git a/kitty_tests/shell_integration.py b/kitty_tests/shell_integration.py
-index 4a340df3a..f8986db86 100644
+index c539111..0a86393 100644
 --- a/kitty_tests/shell_integration.py
 +++ b/kitty_tests/shell_integration.py
-@@ -275,6 +275,22 @@ def redrawn():
+@@ -374,6 +374,7 @@ def redrawn():
              pty.wait_till(lambda: 'XXX' in pty.screen_contents())
              self.assertIn('pre-start', pty.screen_contents())
              self.assertTrue(pty.screen_contents().startswith('pre-start'))
 +            self.assert_command(pty, 'echo pre-start')
+         # Interrupting the startup command must not leave integration half
+         # initialized. The marker is printed by the child itself so that we
+         # know it is the foreground job when we send SIGINT.
+@@ -381,11 +382,28 @@ def redrawn():
+             pty.wait_till(lambda: 'pre-start' in pty.screen_contents())
+             pty.write_to_child('\x03')
+             pty.wait_till(lambda: 'XXX' in pty.screen_contents())
++            # the interrupted startup command is reported as finished
++            self.assert_command(pty, "sh -c 'echo pre-start; exec sleep 100'", exit_status=130)
+             pty.send_cmd_to_child('echo ok1')
+             pty.wait_till(lambda: '\nok1\n' in pty.screen_contents())
+             pty.send_cmd_to_child('echo ok2')
+             pty.wait_till(lambda: '\nok2\n' in pty.screen_contents())
+             self.assertNotIn('FUNCNEST', pty.screen_contents())
 +        self.startup_command_marking_tests()
 +
 +    def startup_command_marking_tests(self, shell='zsh', rc='PS1=XXX', unmarked_cmd=''):
@@ -55,7 +71,7 @@ index 4a340df3a..f8986db86 100644
  
      @unittest.skipUnless(shutil.which('fish'), 'fish not installed')
      def test_fish_integration(self):
-@@ -295,6 +311,7 @@ def test_fish_integration(self):
+@@ -406,6 +424,7 @@ def test_fish_integration(self):
              q = 'XXX\n' + fish_prompt + ' ' * (pty.screen.columns - len(fish_prompt) - len(right_prompt)) + right_prompt
              pty.wait_till(lambda: pty.screen_contents().count(right_prompt) == 1)
              self.ae(pty.screen_contents(), q)
@@ -63,7 +79,7 @@ index 4a340df3a..f8986db86 100644
  
              # shell integration dir must not be in XDG_DATA_DIRS
              cmd = f'string match -q -- "*{shell_integration_dir}*" "$XDG_DATA_DIRS" || echo "XDD_OK"'
-@@ -368,6 +385,14 @@ def redrawn():
+@@ -479,6 +498,14 @@ def redrawn():
  
              pty.send_cmd_to_child('exit')
  
@@ -78,7 +94,7 @@ index 4a340df3a..f8986db86 100644
      def assert_command(self, pty, cmd='', exit_status=0):
          cmd = cmd or pty.last_cmd
          pty.wait_till(lambda: pty.callbacks.last_cmd_exit_status == exit_status, timeout_msg=lambda: f'{pty.callbacks.last_cmd_exit_status=} != {exit_status}')
-@@ -475,6 +500,8 @@ def redrawn():
+@@ -586,6 +613,8 @@ def redrawn():
              pty.wait_till(lambda: 'XXX' in pty.screen_contents())
              self.assertIn('pre-start', pty.screen_contents())
              self.assertTrue(pty.screen_contents().startswith('pre-start'))
@@ -88,10 +104,10 @@ index 4a340df3a..f8986db86 100644
  
          def setup_env(excluded, argv, home_dir, rc='', shell='bash', with_kitten=self.with_kitten):
 diff --git a/shell-integration/bash/kitty.bash b/shell-integration/bash/kitty.bash
-index f1a5a75db..64c4da1e7 100644
+index 9b9d09e..951d2fc 100644
 --- a/shell-integration/bash/kitty.bash
 +++ b/shell-integration/bash/kitty.bash
-@@ -366,7 +366,15 @@ _ksi_main() {
+@@ -372,7 +372,15 @@ _ksi_main() {
      builtin unset KITTY_IS_CLONE_LAUNCH KITTY_CLONE_SOURCE_STRATEGIES
      if [[ -n "$krcs" ]]; then builtin
          builtin printf "\e]2;%s\a" "${krcs//[[:cntrl:]]}" # removes any control characters
@@ -108,7 +124,7 @@ index f1a5a75db..64c4da1e7 100644
  }
  _ksi_main
 diff --git a/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish b/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish
-index e2637d5fa..9369d661b 100644
+index ced297e..a5d3f0b 100644
 --- a/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish
 +++ b/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish
 @@ -29,7 +29,22 @@ if test -n "$KITTY_SI_RUN_COMMAND_AT_STARTUP"
@@ -135,10 +151,10 @@ index e2637d5fa..9369d661b 100644
  
  function __ksi_schedule --on-event fish_prompt -d "Setup kitty integration after other scripts have run, we hope"
 diff --git a/shell-integration/zsh/kitty-integration b/shell-integration/zsh/kitty-integration
-index f4eab14cc..73a7fb8fa 100644
+index 40ef8bf..a6ee173 100644
 --- a/shell-integration/zsh/kitty-integration
 +++ b/shell-integration/zsh/kitty-integration
-@@ -353,7 +353,15 @@ _ksi_deferred_init() {
+@@ -353,6 +353,10 @@ _ksi_deferred_init() {
      # run startup command
      if [[ -n "$krcs" ]]; then
          builtin print -nu "$_ksi_fd" -f '\e]2;%s\e\\' -- "${(V)krcs}"
@@ -146,8 +162,16 @@ index f4eab14cc..73a7fb8fa 100644
 +        if (( ! opt[(Ie)no-prompt-mark] )); then
 +            builtin print -nu "$_ksi_fd" -f '\e]133;C;cmdline=%q\a' -- "$krcs"
 +        fi
-         builtin eval "$krcs"
-+        builtin local -i krcs_status=$?  # declared after eval so as to not be visible to it
+         # If the command is interrupted with Ctrl-C, zsh aborts the rest of
+         # this function, leaving it in precmd_functions so it runs again on the
+         # next prompt and wraps our zle widgets around themselves, causing
+@@ -360,8 +364,12 @@ _ksi_deferred_init() {
+         {
+             builtin eval "$krcs"
+         } always {
++            builtin local -i krcs_status=$?  # declared after eval so as to not be visible to it
+             TRY_BLOCK_INTERRUPT=0
+         }
 +        if (( ! opt[(Ie)no-prompt-mark] )); then
 +            builtin print -nu "$_ksi_fd" '\e]133;D;'$krcs_status'\a'
 +        fi
@@ -155,5 +179,5 @@ index f4eab14cc..73a7fb8fa 100644
  
      if (( $+functions[_ksi_preexec] )); then
 -- 
-2.55.0
+2.56.0
 
